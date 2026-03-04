@@ -152,14 +152,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Firebase first
     import('./firebase-init.js').then(() => {
+        console.log('Firebase initialized successfully');
+        
         // We add a slight delay to allow Firebase to initialize its state
         setTimeout(() => {
             initAuthListener(
                 (user, role) => {
+                    console.log('User logged in with role:', role);
                     hideLoader();
                     renderMainContent(user, role);
                 },
                 () => {
+                    console.log('User logged out');
                     hideLoader();
                     renderLoginScreen();
                 }

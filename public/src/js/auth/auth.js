@@ -20,18 +20,21 @@ export async function login() {
                 // Check if this is the admin email
                 const isAdmin = user.email === 'soulofmedico@gmail.com';
                 
-                // New user, create document
+                // Create new user document
                 await setDoc(userRef, {
                     email: user.email,
                     displayName: user.displayName,
                     role: isAdmin ? 'ADMIN' : 'USER',
                     createdAt: new Date().toISOString()
                 });
+                
+                console.log(`User document created for ${user.email} with role: ${isAdmin ? 'ADMIN' : 'USER'}`);
+            } else {
+                console.log(`Existing user: ${user.email}, role: ${userSnap.data().role}`);
             }
         } catch (firestoreError) {
-            console.error("Firestore error during login:", firestoreError);
-            // If we can't access Firestore, still allow login but warn user
-            console.warn("User document not created/accessible, but login successful");
+            console.error("Firestore error during user document check:", firestoreError);
+            // Don't throw - allow login to proceed even if Firestore fails
         }
 
         return user;
@@ -52,18 +55,31 @@ export async function logout() {
 export function initAuthListener(onLogin, onLogout) {
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
-            // Get user role
+            // Get user role from Firestore
             try {
                 const userRef = doc(window.db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
-                const role = userSnap.exists() ? userSnap.data().role : 'USER';
-                onLogin(user, role);
+                
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    const role = userData.role || 'USER';
+                    console.log(`Auth state changed - User: ${user.email}, Role: ${role}`);
+                    onLogin(user, role);
+                } else {
+                    // User document doesn't exist yet - check if admin email
+                    const isAdmin = user.email === 'soulofmedico@gmail.com';
+                    console.log(`User document not found, defaulting to ${isAdmin ? 'ADMIN' : 'USER'} based on email`);
+                    onLogin(user, isAdmin ? 'ADMIN' : 'USER');
+                }
             } catch (error) {
-                console.error("Error fetching user role", error);
-                // Default to USER role if Firestore is unavailable
-                onLogin(user, 'USER');
+                console.error("Error fetching user role:", error);
+                // Fallback: check if admin email
+                const isAdmin = user.email === 'soulofmedico@gmail.com';
+                console.warn(`Using fallback role detection: ${isAdmin ? 'ADMIN' : 'USER'}`);
+                onLogin(user, isAdmin ? 'ADMIN' : 'USER');
             }
         } else {
+            console.log('User logged out');
             onLogout();
         }
     });
