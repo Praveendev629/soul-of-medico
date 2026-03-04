@@ -12,16 +12,23 @@ export async function login() {
 
         // Ensure user document exists in Firestore
         const userRef = doc(window.db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+        
+        try {
+            const userSnap = await getDoc(userRef);
 
-        if (!userSnap.exists()) {
-            // New user, default role is 'USER'
-            await setDoc(userRef, {
-                email: user.email,
-                displayName: user.displayName,
-                role: 'USER',
-                createdAt: new Date().toISOString()
-            });
+            if (!userSnap.exists()) {
+                // New user, default role is 'USER'
+                await setDoc(userRef, {
+                    email: user.email,
+                    displayName: user.displayName,
+                    role: 'USER',
+                    createdAt: new Date().toISOString()
+                });
+            }
+        } catch (firestoreError) {
+            console.error("Firestore error during login:", firestoreError);
+            // If we can't access Firestore, still allow login but warn user
+            console.warn("User document not created/accessible, but login successful");
         }
 
         return user;
@@ -50,7 +57,8 @@ export function initAuthListener(onLogin, onLogout) {
                 onLogin(user, role);
             } catch (error) {
                 console.error("Error fetching user role", error);
-                onLogin(user, 'USER'); // Fallback
+                // Default to USER role if Firestore is unavailable
+                onLogin(user, 'USER');
             }
         } else {
             onLogout();
