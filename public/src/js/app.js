@@ -1,6 +1,7 @@
 import './firebase-init.js';
 import { login, logout, initAuthListener, signInWithEmail, signUpWithEmail, resetPassword, updateUserProfile } from './auth/auth.js';
 import { getVideosFromFirestore, syncYouTubeVideos, fetchYouTubeVideos, getUnreadNotificationsCount, markNotificationAsRead } from './services/youtube.js';
+import { loadSectionsFromFirestore, addSectionToFirestore, updateSectionInFirestore, deleteSectionFromFirestore, loadFilesFromFirestore, addFileToFirestore, updateFileInFirestore, deleteFileFromFirestore } from './services/sections.js';
 
 const appContainer = document.getElementById('app');
 const globalLoader = document.getElementById('global-loader');
@@ -136,6 +137,269 @@ function renderVideosGrid(videos) {
         </div>
     `).join('');
 }
+
+// Load and display sections
+async function loadSections(containerId, parentId = null) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    try {
+        const sections = await loadSectionsFromFirestore(parentId);
+        
+        if (sections.length === 0) {
+            container.innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">No sections yet. Click "Add New Section" to create one.</p>';
+            return;
+        }
+        
+        let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--spacing-md);">';
+        
+        sections.forEach(section => {
+            const sectionCount = sections.filter(s => s.parentId === section.id).length;
+            html += `
+                <div class="card" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div onclick="openSection('${section.id}', '${section.name.replace(/'/g, "\'")}')" style="display: flex; align-items: center; padding: var(--spacing-md);">
+                        <span class="material-icons-round" style="font-size: 32px; color: var(--color-primary); margin-right: var(--spacing-md);">folder</span>
+                        <div style="flex: 1;">
+                            <h4 style="margin-bottom: 4px;">${section.name}</h4>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted);">${sectionCount} subsections</p>
+                        </div>
+                        ${currentRole === 'ADMIN' ? `
+                            <button onclick="event.stopPropagation(); editSection('${section.id}', '${section.name.replace(/'/g, "\'")}')" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px;">
+                                <span class="material-icons-round">edit</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        
+        // Back button if not root
+        if (parentId !== null) {
+            html = `<button onclick="loadSections('${containerId}', null)" style="margin-bottom: var(--spacing-md); padding: 8px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
+                <span class="material-icons-round" style="margin-right: 4px;">arrow_back</span>
+                Back to Root
+            </button>` + html;
+        }
+        
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading sections:', error);
+        container.innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-danger);">Error loading sections.</p>';
+    }
+}
+
+// Open section (show subsections and files)
+window.openSection = async function(sectionId, sectionName) {
+    const container = document.getElementById('content-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div style="margin-bottom: var(--spacing-lg);">
+            <button onclick="document.getElementById('addSectionBtn').click()" style="margin-bottom: var(--spacing-md); padding: 8px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
+                <span class="material-icons-round" style="margin-right: 4px;">arrow_back</span>
+                Back
+            </button>
+            <h2 style="margin-bottom: var(--spacing-md);">📁 ${sectionName}</h2>
+            ${currentRole === 'ADMIN' ? `
+                <div style="display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+                    <button id="addSubsectionBtn" class="btn" style="padding: 8px 16px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
+                        <span class="material-icons-round" style="margin-right: 4px; font-size: 18px;">create_new_folder</span>
+                        Add Subsection
+                    </button>
+                    <button id="uploadFileInSectionBtn" class="btn" style="padding: 8px 16px; background: var(--color-success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
+                        <span class="material-icons-round" style="margin-right: 4px; font-size: 18px;">upload_file</span>
+                        Upload File
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+        
+        <h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Subsections</h3>
+        <div id="subsections-container"></div>
+        
+        <h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Files</h3>
+        <div id="files-container"></div>
+    `;
+    
+    // Load subsections
+    await loadSections('subsections-container', sectionId);
+    
+    // Load files
+    try {
+        const files = await loadFilesFromFirestore(sectionId);
+        const filesContainer = document.getElementById('files-container');
+        
+        if (files.length === 0) {
+            filesContainer.innerHTML = '<p style="color: var(--color-text-muted); padding: var(--spacing-lg); text-align: center;">No files uploaded yet.</p>';
+        } else {
+            filesContainer.innerHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--spacing-md);">' +
+                files.map(file => `
+                    <div class="card" style="display: flex; align-items: center; padding: var(--spacing-md);">
+                        <span class="material-icons-round" style="font-size: 32px; color: var(--color-primary); margin-right: var(--spacing-md);">insert_drive_file</span>
+                        <div style="flex: 1;">
+                            <h4 style="margin-bottom: 4px;">${file.name}</h4>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted);">Uploaded: ${new Date(file.uploadedAt).toLocaleDateString()}</p>
+                        </div>
+                        ${currentRole === 'ADMIN' ? `
+                            <button onclick="renameFile('${file.id}', '${file.name.replace(/'/g, "\'")}')" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px;">
+                                <span class="material-icons-round">edit</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                `).join('') + '</div>';
+        }
+    } catch (error) {
+        console.error('Error loading files:', error);
+    }
+    
+    // Setup admin buttons
+    if (currentRole === 'ADMIN') {
+        document.getElementById('addSubsectionBtn').onclick = () => showAddSectionModal(sectionId);
+        document.getElementById('uploadFileInSectionBtn').onclick = () => showUploadFileModal(sectionId);
+    }
+};
+
+// Show Add Section Modal
+function showAddSectionModal(parentId = null) {
+    const modalHtml = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+            <div class="card" style="max-width: 400px; width: 90%; position: relative;">
+                <button onclick="this.closest('#addSectionModal').remove()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--color-text-muted);">&times;</button>
+                <h3 style="margin-bottom: var(--spacing-lg);">${parentId ? 'Add Subsection' : 'Add New Section'}</h3>
+                <form id="addSectionForm">
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Section Name</label>
+                        <input type="text" id="sectionNameInput" required placeholder="e.g., Anatomy Notes" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
+                        <button type="button" onclick="this.closest('#addSectionModal').remove()" style="padding: 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">Cancel</button>
+                        <button type="submit" style="padding: 12px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">Create Section</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'addSectionModal';
+    modalContainer.innerHTML = modalHtml;
+    document.body.appendChild(modalContainer);
+    
+    document.getElementById('addSectionForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('sectionNameInput').value;
+        
+        try {
+            await addSectionToFirestore({
+                name,
+                parentId,
+                createdBy: currentUser.uid
+            });
+            alert('Section created successfully!');
+            document.body.removeChild(modalContainer);
+            if (parentId) {
+                openSection(parentId, 'Section');
+            } else {
+                loadSections('sections-container', null);
+            }
+        } catch (error) {
+            alert('Failed to create section: ' + error.message);
+        }
+    };
+}
+
+// Show Upload File Modal
+function showUploadFileModal(sectionId) {
+    const modalHtml = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+            <div class="card" style="max-width: 500px; width: 90%; position: relative;">
+                <button onclick="this.closest('#uploadFileModal').remove()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--color-text-muted);">&times;</button>
+                <h3 style="margin-bottom: var(--spacing-lg);">Upload File</h3>
+                <form id="uploadFileForm">
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">File Name</label>
+                        <input type="text" id="fileNameInput" required placeholder="e.g., Introduction to Anatomy" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
+                    </div>
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Select File</label>
+                        <input type="file" id="fileInput" required accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
+                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 4px;">PDF, DOC, PPT, XLS, JPG, PNG (Max 10MB)</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
+                        <button type="button" onclick="this.closest('#uploadFileModal').remove()" style="padding: 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">Cancel</button>
+                        <button type="submit" style="padding: 12px; background: var(--color-success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'uploadFileModal';
+    modalContainer.innerHTML = modalHtml;
+    document.body.appendChild(modalContainer);
+    
+    document.getElementById('uploadFileForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const fileName = document.getElementById('fileNameInput').value;
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB');
+            return;
+        }
+        
+        try {
+            // For now, just store metadata (you can integrate with Firebase Storage later)
+            await addFileToFirestore({
+                name: fileName,
+                originalName: file.name,
+                sectionId,
+                fileType: file.type,
+                fileSize: file.size,
+                uploadedBy: currentUser.uid
+            });
+            alert('File uploaded successfully! (Note: This is a demo - integrate Firebase Storage for actual file storage)');
+            document.body.removeChild(modalContainer);
+            openSection(sectionId, 'Section');
+        } catch (error) {
+            alert('Failed to upload file: ' + error.message);
+        }
+    };
+}
+
+// Rename file
+window.renameFile = async function(fileId, currentName) {
+    const newName = prompt('Enter new file name:', currentName);
+    if (newName && newName !== currentName) {
+        try {
+            await updateFileInFirestore(fileId, { name: newName });
+            alert('File renamed successfully!');
+            // Reload files
+            const sectionId = ''; // You'll need to track current section
+            openSection(sectionId, 'Section');
+        } catch (error) {
+            alert('Failed to rename file: ' + error.message);
+        }
+    }
+};
+
+// Edit section
+window.editSection = async function(sectionId, currentName) {
+    const newName = prompt('Enter new section name:', currentName);
+    if (newName && newName !== currentName) {
+        try {
+            await updateSectionInFirestore(sectionId, { name: newName });
+            alert('Section renamed successfully!');
+            loadSections('sections-container', null);
+        } catch (error) {
+            alert('Failed to rename section: ' + error.message);
+        }
+    }
+};
 
 function renderSignUpScreen() {
     appContainer.innerHTML = `
@@ -557,7 +821,40 @@ bottomNavItems.forEach(item => {
                 break;
                 
             case 'files':
-                container.innerHTML = `<h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Files</h3><p style="color: var(--color-text-muted); font-size: 0.9rem; text-align: center; padding: var(--spacing-lg) 0;">Document listing goes here.</p>`;
+                // Show admin controls for admins
+                if (currentRole === 'ADMIN') {
+                    container.innerHTML = `
+                        <div style="margin-bottom: var(--spacing-lg);">
+                            <button id="addSectionBtn" class="btn" style="padding: 12px 24px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center;">
+                                <span class="material-icons-round" style="margin-right: 8px;">add_circle</span>
+                                Add New Section
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML += `
+                    <h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Files & Sections</h3>
+                    <div id="sections-container">
+                        <p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">Loading sections...</p>
+                    </div>
+                `;
+                
+                // Load sections from Firestore
+                try {
+                    await loadSections('sections-container', null);
+                    
+                    // Setup Add Section button after loading
+                    if (currentRole === 'ADMIN') {
+                        const addSectionBtn = document.getElementById('addSectionBtn');
+                        if (addSectionBtn) {
+                            addSectionBtn.onclick = () => showAddSectionModal(null);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading sections:', error);
+                    document.getElementById('sections-container').innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-danger);">Error loading sections.</p>';
+                }
                 break;
                 
             case 'downloads':
