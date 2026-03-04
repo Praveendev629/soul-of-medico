@@ -115,6 +115,28 @@ async function checkNotifications() {
     }
 }
 
+// Helper function to render videos grid
+function renderVideosGrid(videos) {
+    if (videos.length === 0) {
+        return '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">No videos available yet.</p>';
+    }
+    
+    return videos.map(video => `
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <img src="${video.thumbnail || `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`}" alt="${video.title}" style="width: 100%; height: 160px; object-fit: cover;">
+            <div style="padding: var(--spacing-md);">
+                <h4 style="margin-bottom: var(--spacing-sm); font-size: 0.95rem; line-height: 1.4;">${video.title}</h4>
+                <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: var(--spacing-sm);">${video.channelTitle || 'Soul of Medico'}</p>
+                <p style="font-size: 0.75rem; color: var(--color-text-muted);">${new Date(video.publishedAt).toLocaleDateString()}</p>
+                <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" style="display: inline-block; margin-top: var(--spacing-sm); padding: 8px 16px; background: var(--color-primary); color: white; text-decoration: none; border-radius: var(--radius-md); font-size: 0.85rem;">
+                    <span class="material-icons-round" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">play_arrow</span>
+                    Watch Video
+                </a>
+            </div>
+        </div>
+    `).join('');
+}
+
 function renderSignUpScreen() {
     appContainer.innerHTML = `
         <div style="max-width: 400px; margin: 0 auto; padding: var(--spacing-lg);">
@@ -281,6 +303,156 @@ function renderEditProfileScreen() {
     });
 }
 
+// Professional Profile Edit Modal
+function renderProfileEditModal() {
+    const modalHtml = `
+        <div id="profileModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+            <div class="card" style="max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative;">
+                <button id="closeModalBtn" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--color-text-muted);">&times;</button>
+                
+                <h2 style="margin-bottom: var(--spacing-lg); text-align: center;">Edit Profile</h2>
+                
+                <!-- Profile Photo Upload -->
+                <div style="text-align: center; margin-bottom: var(--spacing-lg);">
+                    <div style="position: relative; width: 120px; height: 120px; margin: 0 auto 10px;">
+                        <img id="profilePreview" src="${currentUser.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName) + '&background=0d6efd&color=fff&size=200'}" 
+                             alt="Profile" 
+                             style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--color-primary); cursor: pointer;">
+                        <div style="position: absolute; bottom: 0; right: 0; background: var(--color-primary); border-radius: 50%; padding: 8px; border: 3px solid white; cursor: pointer;">
+                            <span class="material-icons-round" style="color: white; font-size: 16px;">camera_alt</span>
+                        </div>
+                    </div>
+                    <input type="file" id="profilePhotoInput" accept="image/*" style="display: none;">
+                    <p style="font-size: 0.9rem; color: var(--color-text-muted);">Click on photo to change</p>
+                </div>
+                
+                <!-- Edit Form -->
+                <form id="editProfileForm">
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Full Name *</label>
+                        <input type="text" id="editName" value="${currentUser.displayName}" required 
+                               style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
+                    </div>
+                    
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Email</label>
+                        <input type="email" value="${currentUser.email}" disabled 
+                               style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem; background: #f5f5f5; color: var(--color-text-muted);">
+                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 4px;">Email cannot be changed</p>
+                    </div>
+                    
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Or Upload Photo</label>
+                        <div style="border: 2px dashed var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-md); text-align: center;">
+                            <span class="material-icons-round" style="font-size: 48px; color: var(--color-text-muted); margin-bottom: 8px;">cloud_upload</span>
+                            <p style="font-size: 0.9rem; color: var(--color-text-muted);">Drag & drop or click to upload</p>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted);">JPG, PNG (Max 2MB)</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+                        <button type="button" id="cancelModalBtn" 
+                                style="padding: 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-size: 1rem; font-weight: 500;">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                style="padding: 12px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 1rem; font-weight: 500;">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHtml;
+    document.body.appendChild(modalContainer);
+    
+    // Get elements
+    const profilePreview = document.getElementById('profilePreview');
+    const profilePhotoInput = document.getElementById('profilePhotoInput');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
+    const editProfileForm = document.getElementById('editProfileForm');
+    
+    // Handle photo click
+    profilePreview.onclick = () => {
+        profilePhotoInput.click();
+    };
+    
+    // Handle file selection
+    profilePhotoInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            if (file.size > 2 * 1024 * 1024) {
+                alert('File size must be less than 2MB');
+                return;
+            }
+            
+            // Create preview URL
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                profilePreview.src = event.target.result;
+                window.selectedPhotoData = event.target.result; // Store for later use
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    // Close modal
+    closeModalBtn.onclick = () => {
+        document.body.removeChild(modalContainer);
+    };
+    
+    cancelModalBtn.onclick = () => {
+        document.body.removeChild(modalContainer);
+    };
+    
+    // Handle form submit
+    editProfileForm.onsubmit = async (e) => {
+        e.preventDefault();
+        showLoader();
+        
+        const displayName = document.getElementById('editName').value;
+        const photoURL = window.selectedPhotoURL || currentUser.photoURL;
+        
+        try {
+            // Update Firestore
+            await updateUserProfile(currentUser.uid, {
+                displayName,
+                photoURL: photoURL || null
+            });
+            
+            // Update Firebase Auth profile
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js").then(async ({ updateProfile }) => {
+                await updateProfile(currentUser, {
+                    displayName,
+                    photoURL: photoURL || null
+                });
+                
+                // Update current user object
+                currentUser.displayName = displayName;
+                if (photoURL) currentUser.photoURL = photoURL;
+                
+                alert('Profile updated successfully!');
+                document.body.removeChild(modalContainer);
+                renderMainContent(currentUser, currentRole);
+            });
+        } catch (error) {
+            alert('Failed to update profile: ' + error.message);
+            hideLoader();
+        }
+    };
+}
+
 function renderMainContent(user, role) {
     currentUser = user;
     currentRole = role;
@@ -297,42 +469,15 @@ function renderMainContent(user, role) {
 
     if (role === 'ADMIN') {
         contentHtml += `
-            <div class="card" style="border-left: 4px solid var(--color-danger); margin-top: var(--spacing-md);">
-                <h3 style="margin-bottom: var(--spacing-sm); color: var(--color-danger);">Admin Area</h3>
-                <p style="margin-bottom: var(--spacing-sm); font-size: 0.9rem; color: var(--color-text-muted);">Manage your educational content below.</p>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-md); margin-top: var(--spacing-md);">
-                    <button id="addSectionBtn" class="btn" style="padding: 16px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; text-align: left;">
-                        <span class="material-icons-round" style="font-size: 24px; margin-right: 12px; vertical-align: middle;">add_circle</span>
-                        <span style="font-weight: 500;">Add Section</span>
-                    </button>
-                    
-                    <button id="uploadFileBtn" class="btn" style="padding: 16px; background: var(--color-success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; text-align: left;">
-                        <span class="material-icons-round" style="font-size: 24px; margin-right: 12px; vertical-align: middle;">cloud_upload</span>
-                        <span style="font-weight: 500;">Upload File</span>
-                    </button>
-                    
-                    <button id="addVideoBtn" class="btn" style="padding: 16px; background: var(--color-info); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; text-align: left;">
-                        <span class="material-icons-round" style="font-size: 24px; margin-right: 12px; vertical-align: middle;">video_library</span>
-                        <span style="font-weight: 500;">Add Video</span>
-                    </button>
+            <div class="card" style="margin-top: var(--spacing-md);">
+                <h3 style="margin-bottom: var(--spacing-sm); color: var(--color-primary);">📢 Notifications</h3>
+                <span id="notification-badge" style="background: var(--color-danger); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: none;">0</span>
+                <div id="notifications-list">
+                    <p style="color: var(--color-text-muted); font-size: 0.9rem; padding: var(--spacing-md) 0;">No new notifications</p>
                 </div>
             </div>
         `;
     }
-    
-    // Add notifications section
-    contentHtml += `
-        <div class="card" style="margin-top: var(--spacing-md);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
-                <h3 style="color: var(--color-primary);">📢 Notifications</h3>
-                <span id="notification-badge" style="background: var(--color-danger); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: none;">0</span>
-            </div>
-            <div id="notifications-list">
-                <p style="color: var(--color-text-muted); font-size: 0.9rem; text-align: center; padding: var(--spacing-lg) 0;">No new notifications</p>
-            </div>
-        </div>
-    `;
 
     // Placeholder for content
     contentHtml += `
@@ -347,26 +492,11 @@ function renderMainContent(user, role) {
     // Check for notifications
     checkNotifications();
 
-    // Setup Admin Buttons
-    if (role === 'ADMIN') {
-        document.getElementById('addSectionBtn').onclick = () => {
-            alert('Add Section feature - Connect to Firestore to create sections');
-        };
-        
-        document.getElementById('uploadFileBtn').onclick = () => {
-            alert('Upload File feature - Integrate with Google Drive API');
-        };
-        
-        document.getElementById('addVideoBtn').onclick = () => {
-            alert('Add Video feature - Add video URLs or upload videos');
-        };
-    }
-
     // Setup Profile Button
     userProfileBtn.onclick = async () => {
         const choice = confirm('Choose:\nOK - Edit Profile\nCancel - Sign Out');
         if (choice) {
-            renderEditProfileScreen();
+            renderProfileEditModal();
         } else {
             showLoader();
             await logout();
@@ -401,25 +531,24 @@ bottomNavItems.forEach(item => {
                     const videosGrid = document.getElementById('videos-grid');
                     videosGrid.innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">Loading videos...</p>';
                     
+                    console.log('Fetching videos from Firestore...');
                     const videos = await getVideosFromFirestore();
+                    console.log(`Found ${videos.length} videos in Firestore`);
                     
+                    // If no videos in Firestore, try to sync from YouTube
                     if (videos.length === 0) {
-                        videosGrid.innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">No videos available yet. Check back soon!</p>';
+                        console.log('No videos in Firestore, syncing from YouTube...');
+                        await syncYouTubeVideos();
+                        const syncedVideos = await getVideosFromFirestore();
+                        console.log(`Synced ${syncedVideos.length} videos from YouTube`);
+                        
+                        if (syncedVideos.length === 0) {
+                            videosGrid.innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">No videos available yet. Check back soon!</p>';
+                        } else {
+                            videosGrid.innerHTML = renderVideosGrid(syncedVideos);
+                        }
                     } else {
-                        videosGrid.innerHTML = videos.map(video => `
-                            <div class="card" style="padding: 0; overflow: hidden;">
-                                <img src="${video.thumbnail || 'https://img.youtube.com/vi/${video.id}/hqdefault.jpg'}" alt="${video.title}" style="width: 100%; height: 160px; object-fit: cover;">
-                                <div style="padding: var(--spacing-md);">
-                                    <h4 style="margin-bottom: var(--spacing-sm); font-size: 0.95rem; line-height: 1.4;">${video.title}</h4>
-                                    <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: var(--spacing-sm);">${video.channelTitle || 'Soul of Medico'}</p>
-                                    <p style="font-size: 0.75rem; color: var(--color-text-muted);">${new Date(video.publishedAt).toLocaleDateString()}</p>
-                                    <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" style="display: inline-block; margin-top: var(--spacing-sm); padding: 8px 16px; background: var(--color-primary); color: white; text-decoration: none; border-radius: var(--radius-md); font-size: 0.85rem;">
-                                        <span class="material-icons-round" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">play_arrow</span>
-                                        Watch Video
-                                    </a>
-                                </div>
-                            </div>
-                        `).join('');
+                        videosGrid.innerHTML = renderVideosGrid(videos);
                     }
                 } catch (error) {
                     console.error('Error loading videos:', error);
