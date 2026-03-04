@@ -48,6 +48,21 @@ body {
 }
 
 /* Utilities */
+.bg-primary-light {
+    background-color: var(--color-primary-light);
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+
+.text-success {
+    color: var(--color-success);
+}
+
+.text-danger {
+    color: var(--color-danger);
+}
 .bg-primary { background-color: var(--color-primary); }
 .text-white { color: #ffffff; }
 .hidden { display: none !important; }

@@ -17,11 +17,14 @@ export async function login() {
             const userSnap = await getDoc(userRef);
 
             if (!userSnap.exists()) {
-                // New user, default role is 'USER'
+                // Check if this is the admin email
+                const isAdmin = user.email === 'soulofmedico@gmail.com';
+                
+                // New user, create document
                 await setDoc(userRef, {
                     email: user.email,
                     displayName: user.displayName,
-                    role: 'USER',
+                    role: isAdmin ? 'ADMIN' : 'USER',
                     createdAt: new Date().toISOString()
                 });
             }

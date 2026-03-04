@@ -46,10 +46,26 @@ function renderMainContent(user, role) {
 
     if (role === 'ADMIN') {
         contentHtml += `
-            <div class="card" style="border-left: 4px solid var(--color-danger);">
+            <div class="card" style="border-left: 4px solid var(--color-danger); margin-top: var(--spacing-md);">
                 <h3 style="margin-bottom: var(--spacing-sm); color: var(--color-danger);">Admin Area</h3>
-                <p style="margin-bottom: var(--spacing-sm); font-size: 0.9rem; color: var(--color-text-muted);">Upload files to Google Drive and manage sections.</p>
-                <button class="btn" style="padding: 8px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer;">Manage Uploads</button>
+                <p style="margin-bottom: var(--spacing-sm); font-size: 0.9rem; color: var(--color-text-muted);">Manage your educational content below.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-md); margin-top: var(--spacing-md);">
+                    <button id="addSectionBtn" class="btn" style="padding: 16px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; text-align: left;">
+                        <span class="material-icons-round" style="font-size: 24px; margin-right: 12px; vertical-align: middle;">add_circle</span>
+                        <span style="font-weight: 500;">Add Section</span>
+                    </button>
+                    
+                    <button id="uploadFileBtn" class="btn" style="padding: 16px; background: var(--color-success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; text-align: left;">
+                        <span class="material-icons-round" style="font-size: 24px; margin-right: 12px; vertical-align: middle;">cloud_upload</span>
+                        <span style="font-weight: 500;">Upload File</span>
+                    </button>
+                    
+                    <button id="addVideoBtn" class="btn" style="padding: 16px; background: var(--color-info); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; text-align: left;">
+                        <span class="material-icons-round" style="font-size: 24px; margin-right: 12px; vertical-align: middle;">video_library</span>
+                        <span style="font-weight: 500;">Add Video</span>
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -63,6 +79,21 @@ function renderMainContent(user, role) {
     `;
 
     appContainer.innerHTML = contentHtml;
+
+    // Setup Admin Buttons
+    if (role === 'ADMIN') {
+        document.getElementById('addSectionBtn').onclick = () => {
+            alert('Add Section feature - Connect to Firestore to create sections');
+        };
+        
+        document.getElementById('uploadFileBtn').onclick = () => {
+            alert('Upload File feature - Integrate with Google Drive API');
+        };
+        
+        document.getElementById('addVideoBtn').onclick = () => {
+            alert('Add Video feature - Add video URLs or upload videos');
+        };
+    }
 
     // Setup Profile Button
     userProfileBtn.onclick = async () => {
