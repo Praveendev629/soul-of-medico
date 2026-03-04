@@ -1,5 +1,5 @@
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 export async function login() {
     try {
@@ -25,6 +25,7 @@ export async function login() {
                     email: user.email,
                     displayName: user.displayName,
                     role: isAdmin ? 'ADMIN' : 'USER',
+                    photoURL: user.photoURL,
                     createdAt: new Date().toISOString()
                 });
                 
@@ -40,6 +41,100 @@ export async function login() {
         return user;
     } catch (error) {
         console.error("Login error:", error);
+        throw error;
+    }
+}
+
+// Email/Password Sign In
+export async function signInWithEmail(email, password) {
+    try {
+        const result = await signInWithEmailAndPassword(window.auth, email, password);
+        const user = result.user;
+        
+        if (!user.emailVerified) {
+            await signOut(window.auth);
+            throw new Error('Please verify your email before logging in. Check your inbox.');
+        }
+        
+        // Check and update user role for admin
+        const userRef = doc(window.db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+            // Update role if this is admin email but role is not set correctly
+            const userData = userSnap.data();
+            if (email === 'soulofmedico@gmail.com' && userData.role !== 'ADMIN') {
+                await updateDoc(userRef, { role: 'ADMIN' });
+                console.log('Updated admin role for soulofmedico@gmail.com');
+            }
+        } else {
+            // Create user document if doesn't exist
+            const isAdmin = email === 'soulofmedico@gmail.com';
+            await setDoc(userRef, {
+                email: user.email,
+                displayName: user.displayName || email.split('@')[0],
+                role: isAdmin ? 'ADMIN' : 'USER',
+                createdAt: new Date().toISOString()
+            });
+        }
+        
+        return user;
+    } catch (error) {
+        console.error("Email sign in error:", error);
+        throw error;
+    }
+}
+
+// Email/Password Sign Up
+export async function signUpWithEmail(email, password, displayName) {
+    try {
+        const result = await createUserWithEmailAndPassword(window.auth, email, password);
+        const user = result.user;
+        
+        // Send verification email
+        await sendEmailVerification(user);
+        
+        // Update profile with display name
+        await updateProfile(user, {
+            displayName: displayName
+        });
+        
+        // Create user document in Firestore
+        const userRef = doc(window.db, "users", user.uid);
+        await setDoc(userRef, {
+            email: user.email,
+            displayName: displayName,
+            role: 'USER',
+            emailVerified: false,
+            createdAt: new Date().toISOString()
+        });
+        
+        return user;
+    } catch (error) {
+        console.error("Sign up error:", error);
+        throw error;
+    }
+}
+
+// Password Reset
+export async function resetPassword(email) {
+    try {
+        await sendPasswordResetEmail(window.auth, email);
+        console.log('Password reset email sent');
+    } catch (error) {
+        console.error("Password reset error:", error);
+        throw error;
+    }
+}
+
+// Update User Profile
+export async function updateUserProfile(userId, updates) {
+    try {
+        const userRef = doc(window.db, "users", userId);
+        await updateDoc(userRef, updates);
+        console.log('Profile updated successfully');
+    } catch (error) {
+        console.error("Profile update error:", error);
         throw error;
     }
 }

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube RSS Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .video { background: white; padding: 15px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .video img { max-width: 300px; border-radius: 4px; }
+        h1 { color: #ff0000; }
+        .loading { text-align: center; padding: 40px; font-size: 18px; }
+        .error { color: red; padding: 20px; background: #ffe6e6; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🎥 Soul of Medico - YouTube Videos (RSS Feed Test)</h1>
+    <div id="status" class="loading">Loading videos...</div>
+    <div id="videos"></div>
+
+    <script>
+        const YOUTUBE_CHANNEL_ID = 'UC9_D5KyamXnm9PSqbIppx8Q';
+        const RSS_FEED_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`;
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+
+        async function fetchVideos() {
+            try {
+                console.log('Fetching RSS feed...');
+                const response = await fetch(corsProxy + encodeURIComponent(RSS_FEED_URL));
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const xmlText = await response.text();
+                console.log('RSS Feed received:', xmlText.substring(0, 200));
+                
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+                
+                const entries = xmlDoc.getElementsByTagName('entry');
+                console.log(`Found ${entries.length} videos`);
+                
+                let html = '';
+                for (let i = 0; i < entries.length; i++) {
+                    const entry = entries[i];
+                    const videoId = entry.getElementsByTagName('yt:videoId')[0]?.textContent;
+                    const title = entry.getElementsByTagName('title')[0]?.textContent;
+                    const author = entry.getElementsByTagName('author')[0];
+                    const channelTitle = author?.getElementsByTagName('name')[0]?.textContent || 'Soul of Medico';
+                    
+                    if (videoId) {
+                        html += `
+                            <div class="video">
+                                <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="${title}">
+                                <h3>${title}</h3>
+                                <p><strong>Channel:</strong> ${channelTitle}</p>
+                                <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">Watch Video</a>
+                            </div>
+                        `;
+                    }
+                }
+                
+                document.getElementById('videos').innerHTML = html;
+                document.getElementById('status').innerHTML = `<strong>✅ Success!</strong> Found ${entries.length} videos from Soul of Medico channel`;
+                document.getElementById('status').style.color = 'green';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('status').className = 'error';
+                document.getElementById('status').innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        fetchVideos();
+    </script>
+</body>
+</html>

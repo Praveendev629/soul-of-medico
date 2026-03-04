@@ -98,6 +98,26 @@ Make sure you have configured your Firebase project:
 3. Enable Authentication > Google Sign-in
 4. Add your Vercel domain to authorized domains
 5. Update Firestore rules as needed
+6. Deploy the updated Firestore rules from `firestore.rules`
+
+## 🎥 YouTube Integration
+
+The app automatically fetches videos from YouTube channel: **UC9_D5KyamXnm9PSqbIppx8Q**
+
+### ✅ NO API KEY NEEDED!
+
+The app now uses **YouTube RSS Feeds** - completely free, no setup required!
+
+### Features:
+- ✅ Automatic video sync on user login
+- ✅ New video notifications on home page
+- ✅ Beautiful video grid in Videos tab
+- ✅ Click to watch on YouTube
+- ✅ Videos cached in Firestore
+- ✅ Admin-only video management
+- ✅ No quota limits or API restrictions
+
+📖 See [YOUTUBE_NO_API.md](YOUTUBE_NO_API.md) for details.
 
 ## 📝 Notes
 
