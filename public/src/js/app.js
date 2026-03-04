@@ -1,3 +1,4 @@
+import './firebase-init.js';
 import { login, logout, initAuthListener } from './auth/auth.js';
 
 const appContainer = document.getElementById('app');
@@ -105,20 +106,43 @@ bottomNavItems.forEach(item => {
 
 // App Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // We expect Firebase to be initialized globally in index.html,
-    // so we can just setup the auth listener here.
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(registration => {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        });
+    }
 
-    // We add a slight delay to allow Firebase to initialize its state
-    setTimeout(() => {
-        initAuthListener(
-            (user, role) => {
-                hideLoader();
-                renderMainContent(user, role);
-            },
-            () => {
-                hideLoader();
-                renderLoginScreen();
-            }
-        );
-    }, 500); // 500ms delay to ensure smooth loading transition initially
+    // Initialize Firebase first
+    import('./firebase-init.js').then(() => {
+        // We add a slight delay to allow Firebase to initialize its state
+        setTimeout(() => {
+            initAuthListener(
+                (user, role) => {
+                    hideLoader();
+                    renderMainContent(user, role);
+                },
+                () => {
+                    hideLoader();
+                    renderLoginScreen();
+                }
+            );
+        }, 500); // 500ms delay to ensure smooth loading transition initially
+    }).catch(error => {
+        console.error('Firebase initialization failed:', error);
+        hideLoader();
+        appContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh;">
+                <h2 style="margin-bottom: var(--spacing-lg); color: var(--color-danger);">Initialization Error</h2>
+                <p style="color: var(--color-text-muted); text-align: center;">Failed to initialize Firebase. Please check your configuration.</p>
+                <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-top: var(--spacing-md);">Error: ${error.message}</p>
+            </div>
+        `;
+    });
 });

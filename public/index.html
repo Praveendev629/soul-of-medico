@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Soul of Medico</title>
     <meta name="theme-color" content="#0d6efd">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="/src/css/index.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="src/css/index.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 </head>
@@ -53,22 +53,7 @@
     </nav>
 
     <!-- App Logic -->
-    <script type="module" src="/src/js/app.js"></script>
-
-    <!-- PWA Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('SW registered: ', registration);
-                    })
-                    .catch(registrationError => {
-                        console.log('SW registration failed: ', registrationError);
-                    });
-            });
-        }
-    </script>
+    <script type="module" src="src/js/app.js"></script>
 </body>
 
 </html>

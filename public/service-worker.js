@@ -1,12 +1,13 @@
 const CACHE_NAME = 'soul-of-medico-v1';
 const ASSETS_TO_CACHE = [
-    '/',
-    '/index.html',
-    '/manifest.json',
-    '/src/css/index.css',
-    '/src/js/app.js',
-    '/src/js/auth/auth.js',
-    '/src/js/services/download.js'
+    './',
+    './index.html',
+    './manifest.json',
+    './src/css/index.css',
+    './src/js/app.js',
+    './src/js/auth/auth.js',
+    './src/js/services/download.js',
+    './src/js/firebase-init.js'
 ];
 
 // Install event: cache app shell
