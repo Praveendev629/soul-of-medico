@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to check if a user is an admin
+    // Assuming we have a 'users' collection where admins have a role field or we check specific emails.
+    // For simplicity, let's assume valid users are admins if they have an admin claim or a specific document states so.
+    // If using custom claims: request.auth.token.admin == true
+    // If using a users collection: get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN'
+    
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
+    function isUser() {
+      return request.auth != null;
+    }
+
+    // Match any document in the 'users' collection
+    match /users/{userId} {
+      // Users can read and write their own document
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Admins can read and write all user documents
+      allow read, write: if isAdmin();
+    }
+
+    // Match documents in "sections", "files", "videos" collections
+    match /{document=**} {
+      // Allow read access to all authenticated users
+      allow read: if isUser();
+      // Allow write access only to admins
+      allow write: if isAdmin();
+    }
+  }
+}

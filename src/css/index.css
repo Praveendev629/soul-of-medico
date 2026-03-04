@@ -1,0 +1,183 @@
+:root {
+    /* Medical Theme Colors */
+    --color-primary: #0d6efd; /* Medical Blue */
+    --color-primary-light: #e7f1ff;
+    --color-primary-dark: #0a58ca;
+    
+    --color-success: #198754; /* Green */
+    --color-success-light: #d1e7dd;
+    
+    --color-danger: #dc3545; /* Red */
+    --color-danger-light: #f8d7da;
+    
+    --color-bg: #f8f9fa; /* Off-white */
+    --color-surface: #ffffff; /* pure white */
+    
+    --color-text: #212529;
+    --color-text-muted: #6c757d;
+    
+    --color-border: #dee2e6;
+    
+    /* Variables */
+    --nav-height: 64px;
+    --header-height: 56px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+    
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile apps */
+}
+
+/* Utilities */
+.bg-primary { background-color: var(--color-primary); }
+.text-white { color: #ffffff; }
+.hidden { display: none !important; }
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.icon-btn:active {
+    background-color: rgba(255,255,255,0.2);
+}
+
+/* Header */
+.app-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    z-index: 1000;
+    box-shadow: var(--shadow-sm);
+}
+
+.app-bar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0 var(--spacing-md);
+}
+
+.app-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+}
+
+/* Main Content */
+.main-content {
+    padding-top: calc(var(--header-height) + var(--spacing-md));
+    padding-bottom: calc(var(--nav-height) + var(--spacing-md));
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+    min-height: 100vh;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-height);
+    background-color: var(--color-surface);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom); /* iOS support */
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    flex: 1;
+    height: 100%;
+    transition: color 0.2s;
+}
+
+.nav-item .material-icons-round {
+    font-size: 24px;
+    margin-bottom: 4px;
+    transition: transform 0.2s;
+}
+
+.nav-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.nav-item.active {
+    color: var(--color-primary);
+}
+
+.nav-item.active .material-icons-round {
+    transform: translateY(-2px);
+}
+
+/* Loading States */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 50vh;
+    color: var(--color-text-muted);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-primary-light);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--spacing-md);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Reusable Components */
+.card {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-md);
+}

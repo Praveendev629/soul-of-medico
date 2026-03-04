@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Soul of Medico</title>
+    <meta name="theme-color" content="#0d6efd">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/src/css/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Top App Bar -->
+    <header class="app-bar bg-primary text-white">
+        <div class="app-bar-content">
+            <h1 class="app-title">Soul of Medico</h1>
+            <button id="userProfileBtn" class="icon-btn text-white" aria-label="User Profile">
+                <span class="material-icons-round">account_circle</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="app" class="main-content">
+        <!-- Dynamic content will be injected here -->
+        <div class="loading-container" id="global-loader">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar (Mobile) -->
+    <nav class="bottom-nav">
+        <a href="#home" class="nav-item active" data-target="home">
+            <span class="material-icons-round">home</span>
+            <span class="nav-label">Home</span>
+        </a>
+        <a href="#videos" class="nav-item" data-target="videos">
+            <span class="material-icons-round">play_circle</span>
+            <span class="nav-label">Videos</span>
+        </a>
+        <a href="#files" class="nav-item" data-target="files">
+            <span class="material-icons-round">folder</span>
+            <span class="nav-label">Files</span>
+        </a>
+        <a href="#downloads" class="nav-item" data-target="downloads">
+            <span class="material-icons-round">download_done</span>
+            <span class="nav-label">Downloads</span>
+        </a>
+    </nav>
+
+    <!-- App Logic -->
+    <script type="module" src="/src/js/app.js"></script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>
