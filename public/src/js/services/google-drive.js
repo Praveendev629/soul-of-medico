@@ -1,6 +1,6 @@
 // Google Drive API Integration
 const CLIENT_ID = '1060370205325-s0rq68mhv2gtjrivvvs064mrf0q0u4e2.apps.googleusercontent.com'; // Replace with your actual Client ID
-const API_KEY = 'YOUR_GOOGLE_API_KEY'; // Replace with your actual API Key
+const API_KEY = 'AIzaSyD9tS0rLdPz9t7906aW9wLsKkU4xWl6i8g'; // Replace with your actual API Key
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
