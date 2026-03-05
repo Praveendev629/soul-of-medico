@@ -1,6 +1,6 @@
 export const GOOGLE_DRIVE_CONFIG = {
     CLIENT_ID: '1060370205325-s0rq68mhv2gtjrivvvs064mrf0q0u4e2.apps.googleusercontent.com',
-    API_KEY: 'YOUR_API_KEY_HERE',
+    API_KEY: 'AIzaSyD9tS0rLdPz9t7906aW9wLsKkU4xWl6i8g',
     DISCOVERY_DOCS: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
     SCOPES: 'https://www.googleapis.com/auth/drive.file'
 };
