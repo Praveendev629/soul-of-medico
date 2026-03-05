@@ -256,8 +256,16 @@ window.openSection = async function(sectionId, sectionName) {
     
     // Setup admin buttons
     if (currentRole === 'ADMIN') {
-        document.getElementById('addSubsectionBtn').onclick = () => showAddSectionModal(sectionId);
-        document.getElementById('uploadFileInSectionBtn').onclick = () => showUploadFileModal(sectionId);
+        const addSubsectionBtn = document.getElementById('addSubsectionBtn');
+        const uploadFileBtn = document.getElementById('uploadFileInSectionBtn');
+        
+        if (addSubsectionBtn) {
+            addSubsectionBtn.onclick = () => showAddSectionModal(sectionId);
+        }
+        
+        if (uploadFileBtn) {
+            uploadFileBtn.onclick = () => showUploadFileModalWithDrive(sectionId);
+        }
     }
 };
 
@@ -400,6 +408,153 @@ window.editSection = async function(sectionId, currentName) {
         }
     }
 };
+
+// Render Profile Tab
+function renderProfileTab() {
+    const container = document.getElementById('content-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <h2 style="margin-bottom: var(--spacing-lg); text-align: center;">My Profile</h2>
+            
+            <div style="text-align: center; margin-bottom: var(--spacing-lg);">
+                <div style="position: relative; width: 150px; height: 150px; margin: 0 auto 10px;">
+                    <img id="profilePhotoDisplay" src="${currentUser.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName) + '&background=0d6efd&color=fff&size=200'}" 
+                         alt="Profile" 
+                         style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--color-primary);">
+                    <button id="changePhotoBtn" style="position: absolute; bottom: 0; right: 0; background: var(--color-primary); border-radius: 50%; padding: 10px; border: 3px solid white; cursor: pointer;">
+                        <span class="material-icons-round" style="color: white; font-size: 20px;">camera_alt</span>
+                    </button>
+                </div>
+                <input type="file" id="profilePhotoUpload" accept="image/*" style="display: none;">
+            </div>
+            
+            <div style="margin-bottom: var(--spacing-md);">
+                <label style="display: block; margin-bottom: 4px; font-weight: 500;">Full Name</label>
+                <div style="display: flex; gap: var(--spacing-sm);">
+                    <input type="text" id="profileNameInput" value="${currentUser.displayName}" 
+                           style="flex: 1; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
+                    <button id="updateNameBtn" style="padding: 12px 24px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">
+                        Update
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: var(--spacing-md);">
+                <label style="display: block; margin-bottom: 4px; font-weight: 500;">Email</label>
+                <input type="email" value="${currentUser.email}" disabled 
+                       style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem; background: #f5f5f5; color: var(--color-text-muted);">
+            </div>
+            
+            <div style="margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border);">
+                <button id="signOutBtn" style="width: 100%; padding: 12px; background: var(--color-danger); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500; font-size: 1rem;">
+                    <span class="material-icons-round" style="vertical-align: middle; margin-right: 8px;">logout</span>
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Setup change photo button
+    const changePhotoBtn = document.getElementById('changePhotoBtn');
+    const profilePhotoUpload = document.getElementById('profilePhotoUpload');
+    const profilePhotoDisplay = document.getElementById('profilePhotoDisplay');
+    const updateNameBtn = document.getElementById('updateNameBtn');
+    const profileNameInput = document.getElementById('profileNameInput');
+    const signOutBtn = document.getElementById('signOutBtn');
+    
+    changePhotoBtn.onclick = () => {
+        profilePhotoUpload.click();
+    };
+    
+    profilePhotoUpload.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            return;
+        }
+        
+        showLoader();
+        
+        try {
+            // Convert to base64 for preview (in production, upload to Firebase Storage)
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const photoData = event.target.result;
+                
+                // For demo, we'll use a placeholder service or store locally
+                // In production: Upload to Firebase Storage and get URL
+                const photoURL = photoData; // Store base64 (not recommended for production)
+                
+                // Update Firestore
+                await updateUserProfile(currentUser.uid, {
+                    photoURL: photoURL
+                });
+                
+                // Update Firebase Auth
+                import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js").then(async ({ updateProfile }) => {
+                    await updateProfile(currentUser, {
+                        photoURL: photoURL
+                    });
+                    
+                    currentUser.photoURL = photoURL;
+                    profilePhotoDisplay.src = photoURL;
+                    alert('Profile photo updated successfully!');
+                    hideLoader();
+                });
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+            alert('Failed to upload photo: ' + error.message);
+            hideLoader();
+        }
+    };
+    
+    updateNameBtn.onclick = async () => {
+        const newName = profileNameInput.value.trim();
+        if (!newName) {
+            alert('Please enter a name');
+            return;
+        }
+        
+        showLoader();
+        
+        try {
+            await updateUserProfile(currentUser.uid, {
+                displayName: newName
+            });
+            
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js").then(async ({ updateProfile }) => {
+                await updateProfile(currentUser, {
+                    displayName: newName
+                });
+                
+                currentUser.displayName = newName;
+                alert('Name updated successfully!');
+                hideLoader();
+            });
+        } catch (error) {
+            alert('Failed to update name: ' + error.message);
+            hideLoader();
+        }
+    };
+    
+    signOutBtn.onclick = async () => {
+        if (confirm('Are you sure you want to sign out?')) {
+            showLoader();
+            await logout();
+        }
+    };
+}
 
 function renderSignUpScreen() {
     appContainer.innerHTML = `
@@ -859,6 +1014,10 @@ bottomNavItems.forEach(item => {
                 
             case 'downloads':
                 container.innerHTML = `<h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Offline Downloads</h3><p style="color: var(--color-text-muted); font-size: 0.9rem; text-align: center; padding: var(--spacing-lg) 0;">No offline files available yet.</p>`;
+                break;
+                
+            case 'profile':
+                renderProfileTab();
                 break;
         }
     });

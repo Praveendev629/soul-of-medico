@@ -39,3 +39,6 @@ firebase-debug.*.log
 
 # Testing
 coverage/
+
+# Google Drive Config (contains secrets)
+public/src/js/config/drive-config.js
