@@ -256,16 +256,8 @@ window.openSection = async function(sectionId, sectionName) {
     
     // Setup admin buttons
     if (currentRole === 'ADMIN') {
-        const addSubsectionBtn = document.getElementById('addSubsectionBtn');
-        const uploadFileBtn = document.getElementById('uploadFileInSectionBtn');
-        
-        if (addSubsectionBtn) {
-            addSubsectionBtn.onclick = () => showAddSectionModal(sectionId);
-        }
-        
-        if (uploadFileBtn) {
-            uploadFileBtn.onclick = () => showUploadFileModalWithDrive(sectionId);
-        }
+        document.getElementById('addSubsectionBtn').onclick = () => showAddSectionModal(sectionId);
+        document.getElementById('uploadFileInSectionBtn').onclick = () => showUploadFileModal(sectionId);
     }
 };
 

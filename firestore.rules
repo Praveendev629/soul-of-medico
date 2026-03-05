@@ -13,28 +13,36 @@ service cloud.firestore {
     // Allow anyone authenticated to read videos, only admins can write
     match /videos/{videoId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+      allow create, update, delete: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
+        request.auth.token.email == 'soulofmedico@gmail.com'
+      );
     }
     
     // Allow anyone authenticated to read notifications, only admins can write
     match /notifications/{notificationId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+      allow create, update, delete: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
+        request.auth.token.email == 'soulofmedico@gmail.com'
+      );
     }
 
     // Allow admins to manage sections, files
     match /sections/{sectionId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+      allow create, update, delete: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
+        request.auth.token.email == 'soulofmedico@gmail.com'
+      );
     }
     
     match /files/{fileId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+      allow create, update, delete: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
+        request.auth.token.email == 'soulofmedico@gmail.com'
+      );
     }
   }
 }

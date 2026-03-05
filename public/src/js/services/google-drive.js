@@ -7,6 +7,8 @@ const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
+let accessToken = 'ya29.a0ATkoCc6u8XrwEKu2kqtkglm9r_ecWHf0nzAU8P2HFyRcth3Nz2FuTX3ozxvesQP9Oi9N81s_xgYZHTpoExyM2X40oGjoTzv0v4p86AnkxYJhTkTpzke3Jr7q7ZhYU_qqlH7U1Pr3lvXTKVjFhzDC9aH-1nZ-JDDetG74wKlhEnP7nvmirI9LAKOk6tcdAn-HXRoJxRAaCgYKAVMSARASFQHGX2MihXYHUBlLn62GRneX9FYpNA0206';
+let refreshToken = '1//04ARCqEdu5vHuCgYIARAAGAQSNwF-L9Ir913RjVeGEhHuiUWLwurluaQmoHu_hhYIqF_s44fzYq0Cy31yrQ_DHqODFACHgcod-2I';
 
 // Initialize Google API client
 export async function initGoogleDrive() {
@@ -34,7 +36,7 @@ async function initializeGapi() {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID,
             scope: SCOPES,
-            callback: '',
+            callback: handleTokenResponse,
         });
         gisInited = true;
         
@@ -45,13 +47,48 @@ async function initializeGapi() {
     }
 }
 
+function handleTokenResponse(response) {
+    if (response.access_token) {
+        accessToken = response.access_token;
+        if (response.refresh_token) {
+            refreshToken = response.refresh_token;
+        }
+        console.log('Token received');
+    }
+}
+
+// Refresh access token
+export async function refreshAccessToken() {
+    return new Promise((resolve, reject) => {
+        tokenClient.callback = (resp) => {
+            if (resp.error) {
+                reject(resp);
+            } else {
+                accessToken = resp.access_token;
+                if (resp.refresh_token) {
+                    refreshToken = resp.refresh_token;
+                }
+                console.log('Access token refreshed');
+                resolve(accessToken);
+            }
+        };
+        tokenClient.requestAccessToken({prompt: ''});
+    });
+}
+
+// Get valid access token
+async function getValidAccessToken() {
+    if (!accessToken) {
+        return await refreshAccessToken();
+    }
+    return accessToken;
+}
+
 // Upload file to Google Drive
 export async function uploadFileToDrive(file, fileName, folderId = null) {
     try {
-        // Check if user is authorized
-        if (!gapi.client.getToken()) {
-            await authorize();
-        }
+        // Get valid access token
+        const token = await getValidAccessToken();
         
         const metadata = {
             name: fileName,
@@ -62,27 +99,23 @@ export async function uploadFileToDrive(file, fileName, folderId = null) {
             metadata.parents = [folderId];
         }
         
-        const accessToken = gapi.client.getToken().access_token;
-        
-        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        // Create file in Drive
+        const createResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json; charset=UTF-8'
             },
             body: JSON.stringify(metadata)
         });
         
-        const fileInfo = await response.json();
+        const fileInfo = await createResponse.json();
         
-        // Now upload the actual file content
-        const form = new FormData();
-        form.append('file', file);
-        
+        // Upload file content
         const uploadResponse = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=media&upload_id=${fileInfo.id}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Length': file.size.toString()
             },
             body: file
