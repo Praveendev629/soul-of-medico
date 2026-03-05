@@ -14,8 +14,9 @@ service cloud.firestore {
     match /videos/{videoId} {
       allow read: if request.auth != null;
       allow create, update, delete: if request.auth != null && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
-        request.auth.token.email == 'soulofmedico@gmail.com'
+        request.auth.token.email == 'soulofmedico@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
       );
     }
     
@@ -23,8 +24,9 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       allow read: if request.auth != null;
       allow create, update, delete: if request.auth != null && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
-        request.auth.token.email == 'soulofmedico@gmail.com'
+        request.auth.token.email == 'soulofmedico@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
       );
     }
 
@@ -32,16 +34,18 @@ service cloud.firestore {
     match /sections/{sectionId} {
       allow read: if request.auth != null;
       allow create, update, delete: if request.auth != null && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
-        request.auth.token.email == 'soulofmedico@gmail.com'
+        request.auth.token.email == 'soulofmedico@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
       );
     }
     
     match /files/{fileId} {
       allow read: if request.auth != null;
       allow create, update, delete: if request.auth != null && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
-        request.auth.token.email == 'soulofmedico@gmail.com'
+        request.auth.token.email == 'soulofmedico@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
       );
     }
   }

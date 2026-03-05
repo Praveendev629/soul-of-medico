@@ -75,7 +75,7 @@ function renderLoginScreen() {
         showLoader();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-        
+
         try {
             await signInWithEmail(email, password);
         } catch (e) {
@@ -98,11 +98,11 @@ function renderLoginScreen() {
 
 async function checkNotifications() {
     if (!currentUser) return;
-    
+
     try {
         const count = await getUnreadNotificationsCount();
         const notificationBadge = document.getElementById('notification-badge');
-        
+
         if (notificationBadge) {
             if (count > 0) {
                 notificationBadge.style.display = 'block';
@@ -121,7 +121,7 @@ function renderVideosGrid(videos) {
     if (videos.length === 0) {
         return '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">No videos available yet.</p>';
     }
-    
+
     return videos.map(video => `
         <div class="card" style="padding: 0; overflow: hidden;">
             <img src="${video.thumbnail || `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`}" alt="${video.title}" style="width: 100%; height: 160px; object-fit: cover;">
@@ -142,29 +142,30 @@ function renderVideosGrid(videos) {
 async function loadSections(containerId, parentId = null) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    
+
     try {
         const sections = await loadSectionsFromFirestore(parentId);
-        
+
         if (sections.length === 0) {
             container.innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">No sections yet. Click "Add New Section" to create one.</p>';
             return;
         }
-        
+
         let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--spacing-md);">';
-        
+
         sections.forEach(section => {
             const sectionCount = sections.filter(s => s.parentId === section.id).length;
+            const driveFolderId = section.driveFolderId || '';
             html += `
                 <div class="card" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <div onclick="openSection('${section.id}', '${section.name.replace(/'/g, "\'")}')" style="display: flex; align-items: center; padding: var(--spacing-md);">
-                        <span class="material-icons-round" style="font-size: 32px; color: var(--color-primary); margin-right: var(--spacing-md);">folder</span>
+                    <div onclick="openSection('${section.id}', '${section.name.replace(/'/g, "\\'")}', '${driveFolderId}')" style="display: flex; align-items: center; padding: var(--spacing-md);">
+                        <span class="material-icons-round" style="font-size: 32px; color: var(--color-primary); margin-right: var(--spacing-md);">${driveFolderId ? 'add_to_drive' : 'folder'}</span>
                         <div style="flex: 1;">
                             <h4 style="margin-bottom: 4px;">${section.name}</h4>
                             <p style="font-size: 0.85rem; color: var(--color-text-muted);">${sectionCount} subsections</p>
                         </div>
                         ${currentRole === 'ADMIN' ? `
-                            <button onclick="event.stopPropagation(); editSection('${section.id}', '${section.name.replace(/'/g, "\'")}')" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px;">
+                            <button onclick="event.stopPropagation(); editSection('${section.id}', '${section.name.replace(/'/g, "\\'")}')" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px;">
                                 <span class="material-icons-round">edit</span>
                             </button>
                         ` : ''}
@@ -172,9 +173,9 @@ async function loadSections(containerId, parentId = null) {
                 </div>
             `;
         });
-        
+
         html += '</div>';
-        
+
         // Back button if not root
         if (parentId !== null) {
             html = `<button onclick="loadSections('${containerId}', null)" style="margin-bottom: var(--spacing-md); padding: 8px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
@@ -182,7 +183,7 @@ async function loadSections(containerId, parentId = null) {
                 Back to Root
             </button>` + html;
         }
-        
+
         container.innerHTML = html;
     } catch (error) {
         console.error('Error loading sections:', error);
@@ -191,10 +192,10 @@ async function loadSections(containerId, parentId = null) {
 }
 
 // Open section (show subsections and files)
-window.openSection = async function(sectionId, sectionName) {
+window.openSection = async function (sectionId, sectionName, driveFolderId = '') {
     const container = document.getElementById('content-container');
     if (!container) return;
-    
+
     container.innerHTML = `
         <div style="margin-bottom: var(--spacing-lg);">
             <button onclick="document.getElementById('addSectionBtn').click()" style="margin-bottom: var(--spacing-md); padding: 8px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
@@ -222,38 +223,74 @@ window.openSection = async function(sectionId, sectionName) {
         <h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Files</h3>
         <div id="files-container"></div>
     `;
-    
+
     // Load subsections
     await loadSections('subsections-container', sectionId);
-    
+
     // Load files
     try {
-        const files = await loadFilesFromFirestore(sectionId);
         const filesContainer = document.getElementById('files-container');
-        
-        if (files.length === 0) {
-            filesContainer.innerHTML = '<p style="color: var(--color-text-muted); padding: var(--spacing-lg); text-align: center;">No files uploaded yet.</p>';
+        let htmlContent = '';
+
+        if (driveFolderId) {
+            filesContainer.innerHTML = '<p style="color: var(--color-text-muted); padding: var(--spacing-lg); text-align: center;">Fetching files from Google Drive...</p>';
+
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js").then(async ({ httpsCallable }) => {
+                try {
+                    const listFiles = httpsCallable(window.functions, 'listFiles');
+                    const result = await listFiles({ folderId: driveFolderId });
+                    const driveFiles = result.data.files || [];
+
+                    if (driveFiles.length === 0) {
+                        htmlContent += '<p style="color: var(--color-text-muted); padding: var(--spacing-lg); text-align: center;">No files found in Google Drive folder.</p>';
+                    } else {
+                        htmlContent += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">' +
+                            driveFiles.map(file => `
+                                <div class="card" style="display: flex; align-items: center; padding: var(--spacing-md);">
+                                    <img src="${file.iconLink}" style="width: 24px; height: 24px; margin-right: var(--spacing-md);" alt="icon">
+                                    <div style="flex: 1;">
+                                        <h4 style="margin-bottom: 4px;"><a href="${file.webViewLink}" target="_blank" style="text-decoration: none; color: inherit;">${file.name}</a></h4>
+                                    </div>
+                                    <a href="${file.webContentLink || file.webViewLink}" target="_blank" style="background: none; border: none; cursor: pointer; color: var(--color-primary); padding: 4px;">
+                                        <span class="material-icons-round">download</span>
+                                    </a>
+                                </div>
+                            `).join('') + '</div>';
+                    }
+
+                    filesContainer.innerHTML = htmlContent;
+                } catch (driveError) {
+                    console.error('Error fetching drive files:', driveError);
+                    htmlContent += '<p style="color: var(--color-danger); padding: var(--spacing-lg); text-align: center;">Error fetching Google Drive files: ' + driveError.message + '</p>';
+                    filesContainer.innerHTML = htmlContent;
+                }
+            });
         } else {
-            filesContainer.innerHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--spacing-md);">' +
-                files.map(file => `
-                    <div class="card" style="display: flex; align-items: center; padding: var(--spacing-md);">
-                        <span class="material-icons-round" style="font-size: 32px; color: var(--color-primary); margin-right: var(--spacing-md);">insert_drive_file</span>
-                        <div style="flex: 1;">
-                            <h4 style="margin-bottom: 4px;">${file.name}</h4>
-                            <p style="font-size: 0.85rem; color: var(--color-text-muted);">Uploaded: ${new Date(file.uploadedAt).toLocaleDateString()}</p>
+            const files = await loadFilesFromFirestore(sectionId);
+            if (files.length === 0) {
+                filesContainer.innerHTML = '<p style="color: var(--color-text-muted); padding: var(--spacing-lg); text-align: center;">No files uploaded yet.</p>';
+            } else {
+                filesContainer.innerHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--spacing-md);">' +
+                    files.map(file => `
+                        <div class="card" style="display: flex; align-items: center; padding: var(--spacing-md);">
+                            <span class="material-icons-round" style="font-size: 32px; color: var(--color-primary); margin-right: var(--spacing-md);">insert_drive_file</span>
+                            <div style="flex: 1;">
+                                <h4 style="margin-bottom: 4px;">${file.name}</h4>
+                                <p style="font-size: 0.85rem; color: var(--color-text-muted);">Uploaded: ${new Date(file.uploadedAt).toLocaleDateString()}</p>
+                            </div>
+                            ${currentRole === 'ADMIN' ? `
+                                <button onclick="renameFile('${file.id}', '${file.name.replace(/'/g, "\\'")}')" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px;">
+                                    <span class="material-icons-round">edit</span>
+                                </button>
+                            ` : ''}
                         </div>
-                        ${currentRole === 'ADMIN' ? `
-                            <button onclick="renameFile('${file.id}', '${file.name.replace(/'/g, "\'")}')" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px;">
-                                <span class="material-icons-round">edit</span>
-                            </button>
-                        ` : ''}
-                    </div>
-                `).join('') + '</div>';
+                    `).join('') + '</div>';
+            }
         }
     } catch (error) {
         console.error('Error loading files:', error);
     }
-    
+
     // Setup admin buttons
     if (currentRole === 'ADMIN') {
         document.getElementById('addSubsectionBtn').onclick = () => showAddSectionModal(sectionId);
@@ -269,9 +306,14 @@ function showAddSectionModal(parentId = null) {
                 <button onclick="this.closest('#addSectionModal').remove()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--color-text-muted);">&times;</button>
                 <h3 style="margin-bottom: var(--spacing-lg);">${parentId ? 'Add Subsection' : 'Add New Section'}</h3>
                 <form id="addSectionForm">
-                    <div style="margin-bottom: var(--spacing-lg);">
+                    <div style="margin-bottom: var(--spacing-md);">
                         <label style="display: block; margin-bottom: 4px; font-weight: 500;">Section Name</label>
                         <input type="text" id="sectionNameInput" required placeholder="e.g., Anatomy Notes" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
+                    </div>
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Google Drive Folder ID (Optional)</label>
+                        <input type="text" id="driveFolderIdInput" placeholder="e.g., 1A2B3C4D5E..." style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
+                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 4px;">To fetch files automatically from a Drive folder</p>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
                         <button type="button" onclick="this.closest('#addSectionModal').remove()" style="padding: 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">Cancel</button>
@@ -281,20 +323,22 @@ function showAddSectionModal(parentId = null) {
             </div>
         </div>
     `;
-    
+
     const modalContainer = document.createElement('div');
     modalContainer.id = 'addSectionModal';
     modalContainer.innerHTML = modalHtml;
     document.body.appendChild(modalContainer);
-    
+
     document.getElementById('addSectionForm').onsubmit = async (e) => {
         e.preventDefault();
         const name = document.getElementById('sectionNameInput').value;
-        
+        const driveFolderId = document.getElementById('driveFolderIdInput').value.trim();
+
         try {
             await addSectionToFirestore({
                 name,
                 parentId,
+                driveFolderId: driveFolderId || null,
                 createdBy: currentUser.uid
             });
             alert('Section created successfully!');
@@ -335,23 +379,23 @@ function showUploadFileModal(sectionId) {
             </div>
         </div>
     `;
-    
+
     const modalContainer = document.createElement('div');
     modalContainer.id = 'uploadFileModal';
     modalContainer.innerHTML = modalHtml;
     document.body.appendChild(modalContainer);
-    
+
     document.getElementById('uploadFileForm').onsubmit = async (e) => {
         e.preventDefault();
         const fileName = document.getElementById('fileNameInput').value;
         const fileInput = document.getElementById('fileInput');
         const file = fileInput.files[0];
-        
+
         if (file.size > 10 * 1024 * 1024) {
             alert('File size must be less than 10MB');
             return;
         }
-        
+
         try {
             // For now, just store metadata (you can integrate with Firebase Storage later)
             await addFileToFirestore({
@@ -372,7 +416,7 @@ function showUploadFileModal(sectionId) {
 }
 
 // Rename file
-window.renameFile = async function(fileId, currentName) {
+window.renameFile = async function (fileId, currentName) {
     const newName = prompt('Enter new file name:', currentName);
     if (newName && newName !== currentName) {
         try {
@@ -388,7 +432,7 @@ window.renameFile = async function(fileId, currentName) {
 };
 
 // Edit section
-window.editSection = async function(sectionId, currentName) {
+window.editSection = async function (sectionId, currentName) {
     const newName = prompt('Enter new section name:', currentName);
     if (newName && newName !== currentName) {
         try {
@@ -405,7 +449,7 @@ window.editSection = async function(sectionId, currentName) {
 function renderProfileTab() {
     const container = document.getElementById('content-container');
     if (!container) return;
-    
+
     container.innerHTML = `
         <div class="card" style="max-width: 600px; margin: 0 auto;">
             <h2 style="margin-bottom: var(--spacing-lg); text-align: center;">My Profile</h2>
@@ -447,7 +491,7 @@ function renderProfileTab() {
             </div>
         </div>
     `;
-    
+
     // Setup change photo button
     const changePhotoBtn = document.getElementById('changePhotoBtn');
     const profilePhotoUpload = document.getElementById('profilePhotoUpload');
@@ -455,48 +499,48 @@ function renderProfileTab() {
     const updateNameBtn = document.getElementById('updateNameBtn');
     const profileNameInput = document.getElementById('profileNameInput');
     const signOutBtn = document.getElementById('signOutBtn');
-    
+
     changePhotoBtn.onclick = () => {
         profilePhotoUpload.click();
     };
-    
+
     profilePhotoUpload.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        
+
         if (!file.type.startsWith('image/')) {
             alert('Please select an image file');
             return;
         }
-        
+
         if (file.size > 5 * 1024 * 1024) {
             alert('File size must be less than 5MB');
             return;
         }
-        
+
         showLoader();
-        
+
         try {
             // Convert to base64 for preview (in production, upload to Firebase Storage)
             const reader = new FileReader();
             reader.onload = async (event) => {
                 const photoData = event.target.result;
-                
+
                 // For demo, we'll use a placeholder service or store locally
                 // In production: Upload to Firebase Storage and get URL
                 const photoURL = photoData; // Store base64 (not recommended for production)
-                
+
                 // Update Firestore
                 await updateUserProfile(currentUser.uid, {
                     photoURL: photoURL
                 });
-                
+
                 // Update Firebase Auth
                 import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js").then(async ({ updateProfile }) => {
                     await updateProfile(currentUser, {
                         photoURL: photoURL
                     });
-                    
+
                     currentUser.photoURL = photoURL;
                     profilePhotoDisplay.src = photoURL;
                     alert('Profile photo updated successfully!');
@@ -510,26 +554,26 @@ function renderProfileTab() {
             hideLoader();
         }
     };
-    
+
     updateNameBtn.onclick = async () => {
         const newName = profileNameInput.value.trim();
         if (!newName) {
             alert('Please enter a name');
             return;
         }
-        
+
         showLoader();
-        
+
         try {
             await updateUserProfile(currentUser.uid, {
                 displayName: newName
             });
-            
+
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js").then(async ({ updateProfile }) => {
                 await updateProfile(currentUser, {
                     displayName: newName
                 });
-                
+
                 currentUser.displayName = newName;
                 alert('Name updated successfully!');
                 hideLoader();
@@ -539,7 +583,7 @@ function renderProfileTab() {
             hideLoader();
         }
     };
-    
+
     signOutBtn.onclick = async () => {
         if (confirm('Are you sure you want to sign out?')) {
             showLoader();
@@ -584,7 +628,7 @@ function renderSignUpScreen() {
         const email = document.getElementById('signupEmail').value;
         const password = document.getElementById('signupPassword').value;
         const displayName = document.getElementById('signupName').value;
-        
+
         try {
             await signUpWithEmail(email, password, displayName);
             alert('Account created! Please check your email to verify your account before logging in.');
@@ -626,7 +670,7 @@ function renderForgotPasswordScreen() {
         e.preventDefault();
         showLoader();
         const email = document.getElementById('resetEmail').value;
-        
+
         try {
             await resetPassword(email);
             alert('Password reset email sent! Check your inbox.');
@@ -684,20 +728,20 @@ function renderEditProfileScreen() {
         showLoader();
         const displayName = document.getElementById('editName').value;
         const photoURL = document.getElementById('editPhotoURL').value;
-        
+
         try {
             await updateUserProfile(currentUser.uid, {
                 displayName,
                 photoURL: photoURL || null
             });
-            
+
             // Update Firebase Auth profile too
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js").then(async ({ updateProfile }) => {
                 await updateProfile(currentUser, {
                     displayName,
                     photoURL: photoURL || null
                 });
-                
+
                 alert('Profile updated successfully!');
                 currentUser.displayName = displayName;
                 currentUser.photoURL = photoURL;
@@ -775,24 +819,24 @@ function renderProfileEditModal() {
             </div>
         </div>
     `;
-    
+
     // Add modal to page
     const modalContainer = document.createElement('div');
     modalContainer.innerHTML = modalHtml;
     document.body.appendChild(modalContainer);
-    
+
     // Get elements
     const profilePreview = document.getElementById('profilePreview');
     const profilePhotoInput = document.getElementById('profilePhotoInput');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const cancelModalBtn = document.getElementById('cancelModalBtn');
     const editProfileForm = document.getElementById('editProfileForm');
-    
+
     // Handle photo click
     profilePreview.onclick = () => {
         profilePhotoInput.click();
     };
-    
+
     // Handle file selection
     profilePhotoInput.onchange = (e) => {
         const file = e.target.files[0];
@@ -802,12 +846,12 @@ function renderProfileEditModal() {
                 alert('Please select an image file');
                 return;
             }
-            
+
             if (file.size > 2 * 1024 * 1024) {
                 alert('File size must be less than 2MB');
                 return;
             }
-            
+
             // Create preview URL
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -817,42 +861,42 @@ function renderProfileEditModal() {
             reader.readAsDataURL(file);
         }
     };
-    
+
     // Close modal
     closeModalBtn.onclick = () => {
         document.body.removeChild(modalContainer);
     };
-    
+
     cancelModalBtn.onclick = () => {
         document.body.removeChild(modalContainer);
     };
-    
+
     // Handle form submit
     editProfileForm.onsubmit = async (e) => {
         e.preventDefault();
         showLoader();
-        
+
         const displayName = document.getElementById('editName').value;
         const photoURL = window.selectedPhotoURL || currentUser.photoURL;
-        
+
         try {
             // Update Firestore
             await updateUserProfile(currentUser.uid, {
                 displayName,
                 photoURL: photoURL || null
             });
-            
+
             // Update Firebase Auth profile
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js").then(async ({ updateProfile }) => {
                 await updateProfile(currentUser, {
                     displayName,
                     photoURL: photoURL || null
                 });
-                
+
                 // Update current user object
                 currentUser.displayName = displayName;
                 if (photoURL) currentUser.photoURL = photoURL;
-                
+
                 alert('Profile updated successfully!');
                 document.body.removeChild(modalContainer);
                 renderMainContent(currentUser, currentRole);
@@ -867,10 +911,10 @@ function renderProfileEditModal() {
 function renderMainContent(user, role) {
     currentUser = user;
     currentRole = role;
-    
+
     // Sync YouTube videos on login
     syncYouTubeVideos();
-    
+
     let contentHtml = `
         <div class="card bg-primary-light">
             <h2 style="color: var(--color-primary-dark); margin-bottom: 8px;">Welcome, ${user.displayName.split(' ')[0]}</h2>
@@ -933,26 +977,26 @@ bottomNavItems.forEach(item => {
             case 'home':
                 container.innerHTML = `<h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Recent Activity</h3><p style="color: var(--color-text-muted); font-size: 0.9rem; text-align: center; padding: var(--spacing-lg) 0;">Home Dashboard Content goes here.</p>`;
                 break;
-                
+
             case 'videos':
                 container.innerHTML = `<h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Videos</h3><div id="videos-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-md);"></div>`;
-                
+
                 // Fetch and display videos
                 try {
                     const videosGrid = document.getElementById('videos-grid');
                     videosGrid.innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">Loading videos...</p>';
-                    
+
                     console.log('Fetching videos from Firestore...');
                     const videos = await getVideosFromFirestore();
                     console.log(`Found ${videos.length} videos in Firestore`);
-                    
+
                     // If no videos in Firestore, try to sync from YouTube
                     if (videos.length === 0) {
                         console.log('No videos in Firestore, syncing from YouTube...');
                         await syncYouTubeVideos();
                         const syncedVideos = await getVideosFromFirestore();
                         console.log(`Synced ${syncedVideos.length} videos from YouTube`);
-                        
+
                         if (syncedVideos.length === 0) {
                             videosGrid.innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">No videos available yet. Check back soon!</p>';
                         } else {
@@ -966,7 +1010,7 @@ bottomNavItems.forEach(item => {
                     container.innerHTML += '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-danger);">Error loading videos. Please try again later.</p>';
                 }
                 break;
-                
+
             case 'files':
                 // Show admin controls for admins
                 if (currentRole === 'ADMIN') {
@@ -979,18 +1023,18 @@ bottomNavItems.forEach(item => {
                         </div>
                     `;
                 }
-                
+
                 container.innerHTML += `
                     <h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Files & Sections</h3>
                     <div id="sections-container">
                         <p style="text-align: center; padding: var(--spacing-lg); color: var(--color-text-muted);">Loading sections...</p>
                     </div>
                 `;
-                
+
                 // Load sections from Firestore
                 try {
                     await loadSections('sections-container', null);
-                    
+
                     // Setup Add Section button after loading
                     if (currentRole === 'ADMIN') {
                         const addSectionBtn = document.getElementById('addSectionBtn');
@@ -1003,11 +1047,11 @@ bottomNavItems.forEach(item => {
                     document.getElementById('sections-container').innerHTML = '<p style="text-align: center; padding: var(--spacing-lg); color: var(--color-danger);">Error loading sections.</p>';
                 }
                 break;
-                
+
             case 'downloads':
                 container.innerHTML = `<h3 style="margin: var(--spacing-lg) 0 var(--spacing-md);">Offline Downloads</h3><p style="color: var(--color-text-muted); font-size: 0.9rem; text-align: center; padding: var(--spacing-lg) 0;">No offline files available yet.</p>`;
                 break;
-                
+
             case 'profile':
                 renderProfileTab();
                 break;
@@ -1033,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Firebase first
     import('./firebase-init.js').then(() => {
         console.log('Firebase initialized successfully');
-        
+
         // We add a slight delay to allow Firebase to initialize its state
         setTimeout(() => {
             initAuthListener(

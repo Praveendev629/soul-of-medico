@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFunctions } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCU-iriPdLHhm8VhDkSOvRfwJmWRm3riN0",
@@ -29,5 +30,6 @@ if (typeof window !== 'undefined') {
 // Make available globally for auth.js and other modules
 window.auth = getAuth(app);
 window.db = getFirestore(app);
+window.functions = getFunctions(app);
 
 console.log('Firebase initialized successfully');
