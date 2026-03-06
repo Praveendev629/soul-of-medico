@@ -18,7 +18,7 @@ export async function login() {
 
             if (!userSnap.exists()) {
                 // Check if this is the admin email
-                const isAdmin = user.email === 'soulofmedico@gmail.com';
+                const isAdmin = user.email === 'soulofmedico001@gmail.com';
                 
                 // Create new user document
                 await setDoc(userRef, {
@@ -63,13 +63,13 @@ export async function signInWithEmail(email, password) {
         if (userSnap.exists()) {
             // Update role if this is admin email but role is not set correctly
             const userData = userSnap.data();
-            if (email === 'soulofmedico@gmail.com' && userData.role !== 'ADMIN') {
+            if (email === 'soulofmedico001@gmail.com' && userData.role !== 'ADMIN') {
                 await updateDoc(userRef, { role: 'ADMIN' });
-                console.log('Updated admin role for soulofmedico@gmail.com');
+                console.log('Updated admin role for soulofmedico001@gmail.com');
             }
         } else {
             // Create user document if doesn't exist
-            const isAdmin = email === 'soulofmedico@gmail.com';
+            const isAdmin = email === 'soulofmedico001@gmail.com';
             await setDoc(userRef, {
                 email: user.email,
                 displayName: user.displayName || email.split('@')[0],
@@ -162,14 +162,14 @@ export function initAuthListener(onLogin, onLogout) {
                     onLogin(user, role);
                 } else {
                     // User document doesn't exist yet - check if admin email
-                    const isAdmin = user.email === 'soulofmedico@gmail.com';
+                    const isAdmin = user.email === 'soulofmedico001@gmail.com';
                     console.log(`User document not found, defaulting to ${isAdmin ? 'ADMIN' : 'USER'} based on email`);
                     onLogin(user, isAdmin ? 'ADMIN' : 'USER');
                 }
             } catch (error) {
                 console.error("Error fetching user role:", error);
                 // Fallback: check if admin email
-                const isAdmin = user.email === 'soulofmedico@gmail.com';
+                const isAdmin = user.email === 'soulofmedico001@gmail.com';
                 console.warn(`Using fallback role detection: ${isAdmin ? 'ADMIN' : 'USER'}`);
                 onLogin(user, isAdmin ? 'ADMIN' : 'USER');
             }
