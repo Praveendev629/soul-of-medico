@@ -333,16 +333,32 @@ function showAddSectionModal(parentId = null) {
 
     document.getElementById('addSectionForm').onsubmit = async (e) => {
         e.preventDefault();
-        const name = document.getElementById('sectionNameInput').value;
+        const name = document.getElementById('sectionNameInput').value.trim();
         const driveFolderId = document.getElementById('driveFolderIdInput').value.trim();
 
+        // Validate inputs
+        if (!name) {
+            alert('Section name is required');
+            return;
+        }
+
+        // Check if user is authenticated
+        if (!currentUser || !currentUser.uid) {
+            alert('You must be logged in to create a section');
+            console.error('currentUser not set:', currentUser);
+            return;
+        }
+
         try {
+            console.log('Creating section with data:', { name, parentId, driveFolderId, createdBy: currentUser.uid });
+            
             await addSectionToFirestore({
                 name,
                 parentId,
                 driveFolderId: driveFolderId || null,
                 createdBy: currentUser.uid
             });
+            
             alert('Section created successfully!');
             document.body.removeChild(modalContainer);
             if (parentId) {
@@ -351,6 +367,7 @@ function showAddSectionModal(parentId = null) {
                 loadSections('sections-container', null);
             }
         } catch (error) {
+            console.error('Section creation error:', error);
             alert('Failed to create section: ' + error.message);
         }
     };

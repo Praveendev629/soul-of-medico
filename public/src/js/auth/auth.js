@@ -10,17 +10,15 @@ export async function login() {
         const result = await signInWithPopup(window.auth, provider);
         const user = result.user;
 
-        // Ensure user document exists in Firestore
+        // Ensure user document exists in Firestore with proper role
         const userRef = doc(window.db, "users", user.uid);
+        const isAdmin = user.email === 'soulofmedico001@gmail.com';
         
         try {
             const userSnap = await getDoc(userRef);
 
             if (!userSnap.exists()) {
-                // Check if this is the admin email
-                const isAdmin = user.email === 'soulofmedico001@gmail.com';
-                
-                // Create new user document
+                // Create new user document with role
                 await setDoc(userRef, {
                     email: user.email,
                     displayName: user.displayName,
@@ -31,7 +29,13 @@ export async function login() {
                 
                 console.log(`User document created for ${user.email} with role: ${isAdmin ? 'ADMIN' : 'USER'}`);
             } else {
-                console.log(`Existing user: ${user.email}, role: ${userSnap.data().role}`);
+                // Check if role is missing and update if needed
+                const userData = userSnap.data();
+                if (!userData.role || (isAdmin && userData.role !== 'ADMIN')) {
+                    await updateDoc(userRef, { role: isAdmin ? 'ADMIN' : 'USER' });
+                    console.log(`Updated role for ${user.email} to ${isAdmin ? 'ADMIN' : 'USER'}`);
+                }
+                console.log(`Existing user: ${user.email}, role: ${userData.role || (isAdmin ? 'ADMIN' : 'USER')}`);
             }
         } catch (firestoreError) {
             console.error("Firestore error during user document check:", firestoreError);

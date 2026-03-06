@@ -20,12 +20,24 @@ export async function loadSectionsFromFirestore(parentId = null) {
 
 export async function addSectionToFirestore(sectionData) {
     try {
+        console.log('addSectionToFirestore called with:', sectionData);
+        
+        if (!sectionData.name) {
+            throw new Error('Section name is required');
+        }
+        
+        if (!window.db) {
+            throw new Error('Firestore database not initialized. Please refresh the page.');
+        }
+        
         const sectionsRef = collection(window.db, 'sections');
-        await addDoc(sectionsRef, {
+        const docRef = await addDoc(sectionsRef, {
             ...sectionData,
             createdAt: new Date().toISOString()
         });
-        console.log('Section added successfully');
+        
+        console.log('Section added successfully with ID:', docRef.id);
+        return docRef.id;
     } catch (error) {
         console.error('Error adding section:', error);
         throw error;
