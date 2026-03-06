@@ -13,18 +13,29 @@ let refreshToken = '1//04KAkx4X4QspNCgYIARAAGAQSNwF-L9IrzroFhZNJC3UWibMjPKvgWyzp
 // Initialize Google API client
 export async function initGoogleDrive() {
     return new Promise((resolve, reject) => {
-        // Load gapi script
-        const script = document.createElement('script');
-        script.src = 'https://apis.google.com/js/api.js';
-        script.onload = () => {
-            gapi.load('client', initializeGapi);
+        // Load Google Identity Services script first
+        const gisScript = document.createElement('script');
+        gisScript.src = 'https://accounts.google.com/gsi/client';
+        gisScript.async = true;
+        gisScript.defer = true;
+        gisScript.onload = () => {
+            // Load gapi script after GIS is loaded
+            const gapiScript = document.createElement('script');
+            gapiScript.src = 'https://apis.google.com/js/api.js';
+            gapiScript.onload = () => {
+                gapi.load('client', () => {
+                    initializeGapi(resolve, reject);
+                });
+            };
+            gapiScript.onerror = reject;
+            document.head.appendChild(gapiScript);
         };
-        script.onerror = reject;
-        document.head.appendChild(script);
+        gisScript.onerror = reject;
+        document.head.appendChild(gisScript);
     });
 }
 
-async function initializeGapi() {
+async function initializeGapi(resolve, reject) {
     try {
         await gapi.client.init({
             apiKey: API_KEY,
@@ -33,17 +44,23 @@ async function initializeGapi() {
         gapiInited = true;
         
         // Initialize token client
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: SCOPES,
-            callback: handleTokenResponse,
-        });
-        gisInited = true;
+        try {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: handleTokenResponse,
+            });
+            gisInited = true;
+        } catch (gisError) {
+            console.warn('Could not initialize token client:', gisError);
+            gisInited = false;
+        }
         
-        console.log('Google Drive API initialized');
+        console.log('Google Drive API initialized successfully');
+        resolve();
     } catch (error) {
         console.error('Error initializing Google Drive API:', error);
-        throw error;
+        reject(error);
     }
 }
 
@@ -78,8 +95,13 @@ export async function refreshAccessToken() {
 
 // Get valid access token
 async function getValidAccessToken() {
-    if (!accessToken) {
-        return await refreshAccessToken();
+    if (!accessToken || accessToken === 'ya29.a0ATkoCc7_X9mkrIcP0fUxuEud5lIKO2ZFeT2ZEu-GtWh0PP9y3SN4V45Eebx-jufjHhsDR5lQpARE1lypLDPvIOjMu2cgLRBJW8a61PCOtsLzRfgw8xp3jc5B2a0dvcJGUxAvta_yc6xuOpaGH9XhzJngpNhMgUTT8lvMsQVEWkhuhifnHeAk0fx6mz4bFoIy-oUtFPYaCgYKATcSARISFQHGX2MiRB3krsXJe2CcrkxE6Su1tA0206') {
+        try {
+            return await refreshAccessToken();
+        } catch (err) {
+            console.error('Failed to refresh token, requesting new authorization:', err);
+            return await authorize();
+        }
     }
     return accessToken;
 }
@@ -87,8 +109,17 @@ async function getValidAccessToken() {
 // Upload file to Google Drive using multipart method
 export async function uploadFileToDrive(file, fileName, folderId = null) {
     try {
+        console.log('Starting file upload to Google Drive...');
+        console.log('gapiInited:', gapiInited, 'gisInited:', gisInited);
+        
+        // Check if APIs are initialized
+        if (!gapiInited || !gisInited) {
+            throw new Error('Google APIs not properly initialized. Please refresh the page.');
+        }
+        
         // First, ensure we have a valid token
         if (!gapi.client.getToken()) {
+            console.log('No token found, requesting authorization...');
             await authorize();
         }
         
@@ -101,6 +132,8 @@ export async function uploadFileToDrive(file, fileName, folderId = null) {
             metadata.parents = [folderId];
         }
         
+        console.log('Uploading file with metadata:', metadata);
+        
         // Use gapi.client for authenticated upload
         const response = await gapi.client.drive.files.create({
             resource: metadata,
@@ -112,6 +145,7 @@ export async function uploadFileToDrive(file, fileName, folderId = null) {
         });
         
         const uploadedFile = response.result;
+        console.log('File uploaded successfully:', uploadedFile);
         
         // Make file accessible via link
         try {
@@ -154,6 +188,11 @@ async function setFilePermissions(fileId) {
 // Authorize user
 function authorize() {
     return new Promise((resolve, reject) => {
+        if (!tokenClient) {
+            reject(new Error('Token client not initialized'));
+            return;
+        }
+        
         tokenClient.callback = async (resp) => {
             if (resp.error) {
                 reject(resp);

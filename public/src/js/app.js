@@ -2,6 +2,7 @@ import './firebase-init.js';
 import { login, logout, initAuthListener, signInWithEmail, signUpWithEmail, resetPassword, updateUserProfile } from './auth/auth.js';
 import { getVideosFromFirestore, syncYouTubeVideos, fetchYouTubeVideos, getUnreadNotificationsCount, markNotificationAsRead } from './services/youtube.js';
 import { loadSectionsFromFirestore, addSectionToFirestore, updateSectionInFirestore, deleteSectionFromFirestore, loadFilesFromFirestore, addFileToFirestore, updateFileInFirestore, deleteFileFromFirestore } from './services/sections.js';
+import { initGoogleDrive } from './services/google-drive.js';
 
 const appContainer = document.getElementById('app');
 const globalLoader = document.getElementById('global-loader');
@@ -1173,6 +1174,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Firebase first
     import('./firebase-init.js').then(() => {
         console.log('Firebase initialized successfully');
+        
+        // Initialize Google Drive API
+        console.log('Initializing Google Drive API...');
+        initGoogleDrive().then(() => {
+            console.log('Google Drive API initialized');
+        }).catch(err => {
+            console.warn('Google Drive API initialization skipped (file uploads may not work):', err);
+        });
 
         // We add a slight delay to allow Firebase to initialize its state
         setTimeout(() => {
