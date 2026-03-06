@@ -3,6 +3,7 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCU-iriPdLHhm8VhDkSOvRfwJmWRm3riN0",
@@ -31,5 +32,6 @@ if (typeof window !== 'undefined') {
 window.auth = getAuth(app);
 window.db = getFirestore(app);
 window.functions = getFunctions(app);
+window.storage = getStorage(app);
 
 console.log('Firebase initialized successfully');

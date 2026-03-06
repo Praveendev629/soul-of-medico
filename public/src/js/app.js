@@ -156,9 +156,10 @@ async function loadSections(containerId, parentId = null) {
         sections.forEach(section => {
             const sectionCount = sections.filter(s => s.parentId === section.id).length;
             const driveFolderId = section.driveFolderId || '';
+            const parentIdParam = parentId ? `'${parentId}'` : 'null';
             html += `
                 <div class="card" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <div onclick="openSection('${section.id}', '${section.name.replace(/'/g, "\\'")}', '${driveFolderId}')" style="display: flex; align-items: center; padding: var(--spacing-md);">
+                    <div onclick="openSection('${section.id}', '${section.name.replace(/'/g, "\\'")}', '${driveFolderId}', ${parentIdParam})" style="display: flex; align-items: center; padding: var(--spacing-md);">
                         <span class="material-icons-round" style="font-size: 32px; color: var(--color-primary); margin-right: var(--spacing-md);">${driveFolderId ? 'add_to_drive' : 'folder'}</span>
                         <div style="flex: 1;">
                             <h4 style="margin-bottom: 4px;">${section.name}</h4>
@@ -192,20 +193,20 @@ async function loadSections(containerId, parentId = null) {
 }
 
 // Open section (show subsections and files)
-window.openSection = async function (sectionId, sectionName, driveFolderId = '') {
+window.openSection = async function (sectionId, sectionName, driveFolderId = '', parentId = null) {
     const container = document.getElementById('content-container');
     if (!container) return;
 
     container.innerHTML = `
         <div style="margin-bottom: var(--spacing-lg);">
-            <button onclick="document.getElementById('addSectionBtn').click()" style="margin-bottom: var(--spacing-md); padding: 8px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
+            <button onclick="loadSections('sections-container', ${parentId === null ? 'null' : "'" + parentId + "'"})" style="margin-bottom: var(--spacing-md); padding: 8px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
                 <span class="material-icons-round" style="margin-right: 4px;">arrow_back</span>
                 Back
             </button>
             <h2 style="margin-bottom: var(--spacing-md);">📁 ${sectionName}</h2>
             ${currentRole === 'ADMIN' ? `
                 <div style="display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
-                    <button id="addSubsectionBtn" class="btn" style="padding: 8px 16px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
+                    <button id="addSubsectionBtn" class="btn" onclick="event.preventDefault()" style="padding: 8px 16px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center;">
                         <span class="material-icons-round" style="margin-right: 4px; font-size: 18px;">create_new_folder</span>
                         Add Subsection
                     </button>
@@ -294,7 +295,7 @@ window.openSection = async function (sectionId, sectionName, driveFolderId = '')
     // Setup admin buttons
     if (currentRole === 'ADMIN') {
         document.getElementById('addSubsectionBtn').onclick = () => showAddSectionModal(sectionId);
-        document.getElementById('uploadFileInSectionBtn').onclick = () => showUploadFileModal(sectionId);
+        document.getElementById('uploadFileInSectionBtn').onclick = () => showUploadFileModal(sectionId, driveFolderId);
     }
 };
 
@@ -355,7 +356,7 @@ function showAddSectionModal(parentId = null) {
 }
 
 // Show Upload File Modal
-function showUploadFileModal(sectionId) {
+function showUploadFileModal(sectionId, driveFolderId = null) {
     const modalHtml = `
         <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
             <div class="card" style="max-width: 500px; width: 90%; position: relative;">
@@ -363,17 +364,22 @@ function showUploadFileModal(sectionId) {
                 <h3 style="margin-bottom: var(--spacing-lg);">Upload File</h3>
                 <form id="uploadFileForm">
                     <div style="margin-bottom: var(--spacing-lg);">
-                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">File Name</label>
-                        <input type="text" id="fileNameInput" required placeholder="e.g., Introduction to Anatomy" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">File Name (Optional)</label>
+                        <input type="text" id="fileNameInput" placeholder="Leave blank to use original filename" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
                     </div>
                     <div style="margin-bottom: var(--spacing-lg);">
                         <label style="display: block; margin-bottom: 4px; font-weight: 500;">Select File</label>
-                        <input type="file" id="fileInput" required accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
-                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 4px;">PDF, DOC, PPT, XLS, JPG, PNG (Max 10MB)</p>
+                        <input type="file" id="fileInput" required accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.mp4,.mov,.avi" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem;">
+                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 4px;">Supported formats: PDF, DOC, PPT, XLS, JPG, PNG, GIF, MP4, MOV, AVI (Max 100MB)</p>
+                    </div>
+                    <div id="uploadProgress" style="display: none; margin-bottom: var(--spacing-lg);">
+                        <div style="background: var(--color-surface); border-radius: var(--radius-md); overflow: hidden; height: 24px;">
+                            <div id="progressBar" style="background: var(--color-primary); height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem;">0%</div>
+                        </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
                         <button type="button" onclick="this.closest('#uploadFileModal').remove()" style="padding: 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">Cancel</button>
-                        <button type="submit" style="padding: 12px; background: var(--color-success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">Upload</button>
+                        <button type="submit" id="uploadBtn" style="padding: 12px; background: var(--color-success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">Upload</button>
                     </div>
                 </form>
             </div>
@@ -387,30 +393,95 @@ function showUploadFileModal(sectionId) {
 
     document.getElementById('uploadFileForm').onsubmit = async (e) => {
         e.preventDefault();
-        const fileName = document.getElementById('fileNameInput').value;
         const fileInput = document.getElementById('fileInput');
         const file = fileInput.files[0];
+        const customFileName = document.getElementById('fileNameInput').value.trim();
+        const uploadedFileName = customFileName || file.name;
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
 
-        if (file.size > 10 * 1024 * 1024) {
-            alert('File size must be less than 10MB');
+        if (file.size > 100 * 1024 * 1024) {
+            alert('File size must be less than 100MB');
             return;
         }
 
+        uploadBtn.disabled = true;
+        uploadProgress.style.display = 'block';
+
         try {
-            // For now, just store metadata (you can integrate with Firebase Storage later)
-            await addFileToFirestore({
-                name: fileName,
-                originalName: file.name,
-                sectionId,
-                fileType: file.type,
-                fileSize: file.size,
-                uploadedBy: currentUser.uid
-            });
-            alert('File uploaded successfully! (Note: This is a demo - integrate Firebase Storage for actual file storage)');
+            if (driveFolderId) {
+                // Upload to Google Drive
+                try {
+                    const uploadFileToDrive = (await import('./services/google-drive.js')).uploadFileToDrive;
+                    
+                    // Simulate progress (actual progress depends on Google Drive API)
+                    let progress = 0;
+                    const progressInterval = setInterval(() => {
+                        if (progress < 90) {
+                            progress += Math.random() * 30;
+                            if (progress > 90) progress = 90;
+                            progressBar.style.width = progress + '%';
+                            progressBar.textContent = Math.floor(progress) + '%';
+                        }
+                    }, 500);
+
+                    const uploadedFile = await uploadFileToDrive(file, uploadedFileName, driveFolderId);
+                    
+                    clearInterval(progressInterval);
+                    progress = 100;
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = '100%';
+
+                    // Also save metadata in Firestore for tracking
+                    await addFileToFirestore({
+                        name: uploadedFileName,
+                        originalName: file.name,
+                        sectionId,
+                        fileType: file.type,
+                        fileSize: file.size,
+                        uploadedBy: currentUser.uid,
+                        driveFileId: uploadedFile.id,
+                        driveLink: uploadedFile.webViewLink
+                    });
+
+                    alert('File uploaded to Google Drive successfully!');
+                } catch (driveError) {
+                    console.error('Google Drive upload error:', driveError);
+                    alert('Failed to upload to Google Drive. Saving locally instead.');
+                    
+                    // Fallback to local storage
+                    await addFileToFirestore({
+                        name: uploadedFileName,
+                        originalName: file.name,
+                        sectionId,
+                        fileType: file.type,
+                        fileSize: file.size,
+                        uploadedBy: currentUser.uid
+                    });
+                }
+            } else {
+                // Just store metadata in Firestore
+                progressBar.style.width = '100%';
+                progressBar.textContent = '100%';
+                
+                await addFileToFirestore({
+                    name: uploadedFileName,
+                    originalName: file.name,
+                    sectionId,
+                    fileType: file.type,
+                    fileSize: file.size,
+                    uploadedBy: currentUser.uid
+                });
+                alert('File information saved successfully!');
+            }
+
             document.body.removeChild(modalContainer);
             openSection(sectionId, 'Section');
         } catch (error) {
+            console.error('Upload error:', error);
             alert('Failed to upload file: ' + error.message);
+            uploadBtn.disabled = false;
         }
     };
 }
@@ -521,22 +592,24 @@ function renderProfileTab() {
         showLoader();
 
         try {
-            // Convert to base64 for preview (in production, upload to Firebase Storage)
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const photoData = event.target.result;
+            // Upload to Firebase Storage
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js").then(async ({ ref, uploadBytes, getDownloadURL }) => {
+                try {
+                    const storageRef = ref(window.storage, `profile-photos/${currentUser.uid}/${Date.now()}_${file.name}`);
+                    
+                    // Upload file to storage
+                    await uploadBytes(storageRef, file);
+                    
+                    // Get download URL
+                    const photoURL = await getDownloadURL(storageRef);
 
-                // For demo, we'll use a placeholder service or store locally
-                // In production: Upload to Firebase Storage and get URL
-                const photoURL = photoData; // Store base64 (not recommended for production)
+                    // Update Firestore
+                    await updateUserProfile(currentUser.uid, {
+                        photoURL: photoURL
+                    });
 
-                // Update Firestore
-                await updateUserProfile(currentUser.uid, {
-                    photoURL: photoURL
-                });
-
-                // Update Firebase Auth
-                import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js").then(async ({ updateProfile }) => {
+                    // Update Firebase Auth
+                    const { updateProfile } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
                     await updateProfile(currentUser, {
                         photoURL: photoURL
                     });
@@ -545,9 +618,28 @@ function renderProfileTab() {
                     profilePhotoDisplay.src = photoURL;
                     alert('Profile photo updated successfully!');
                     hideLoader();
-                });
-            };
-            reader.readAsDataURL(file);
+                } catch (storageError) {
+                    console.error('Storage error:', storageError);
+                    alert('Failed to upload photo to storage. Trying fallback method...');
+                    
+                    // Fallback: Use a simple image service
+                    const photoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName)}&background=0d6efd&color=fff&size=200&timestamp=${Date.now()}`;
+                    
+                    await updateUserProfile(currentUser.uid, {
+                        photoURL: photoURL
+                    });
+
+                    const { updateProfile: updateAuthProfile } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
+                    await updateAuthProfile(currentUser, {
+                        photoURL: photoURL
+                    });
+
+                    currentUser.photoURL = photoURL;
+                    profilePhotoDisplay.src = photoURL;
+                    alert('Profile photo updated successfully (using avatar service)!');
+                    hideLoader();
+                }
+            });
         } catch (error) {
             console.error('Error uploading photo:', error);
             alert('Failed to upload photo: ' + error.message);
@@ -911,6 +1003,10 @@ function renderProfileEditModal() {
 function renderMainContent(user, role) {
     currentUser = user;
     currentRole = role;
+    
+    // Store globally for use in openSection and other functions
+    window.currentUserGlobal = user;
+    window.currentRoleGlobal = role;
 
     // Sync YouTube videos on login
     syncYouTubeVideos();

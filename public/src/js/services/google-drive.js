@@ -84,11 +84,13 @@ async function getValidAccessToken() {
     return accessToken;
 }
 
-// Upload file to Google Drive
+// Upload file to Google Drive using multipart method
 export async function uploadFileToDrive(file, fileName, folderId = null) {
     try {
-        // Get valid access token
-        const token = await getValidAccessToken();
+        // First, ensure we have a valid token
+        if (!gapi.client.getToken()) {
+            await authorize();
+        }
         
         const metadata = {
             name: fileName,
@@ -99,38 +101,31 @@ export async function uploadFileToDrive(file, fileName, folderId = null) {
             metadata.parents = [folderId];
         }
         
-        // Create file in Drive
-        const createResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json; charset=UTF-8'
+        // Use gapi.client for authenticated upload
+        const response = await gapi.client.drive.files.create({
+            resource: metadata,
+            media: {
+                mimeType: file.type,
+                body: file
             },
-            body: JSON.stringify(metadata)
+            fields: 'id, name, webViewLink, webContentLink, mimeType'
         });
         
-        const fileInfo = await createResponse.json();
-        
-        // Upload file content
-        const uploadResponse = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=media&upload_id=${fileInfo.id}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Length': file.size.toString()
-            },
-            body: file
-        });
-        
-        const uploadedFile = await uploadResponse.json();
+        const uploadedFile = response.result;
         
         // Make file accessible via link
-        await setFilePermissions(uploadedFile.id);
+        try {
+            await setFilePermissions(uploadedFile.id);
+        } catch (permError) {
+            console.warn('Could not set permissions:', permError);
+        }
         
         return {
             id: uploadedFile.id,
             name: uploadedFile.name,
             webViewLink: uploadedFile.webViewLink,
-            webContentLink: uploadedFile.webContentLink
+            webContentLink: uploadedFile.webContentLink,
+            mimeType: uploadedFile.mimeType
         };
     } catch (error) {
         console.error('Error uploading to Drive:', error);
@@ -141,21 +136,18 @@ export async function uploadFileToDrive(file, fileName, folderId = null) {
 // Set file permissions to make it accessible
 async function setFilePermissions(fileId) {
     try {
-        const accessToken = gapi.client.getToken().access_token;
-        
-        await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: 'anyone',
-                role: 'reader'
-            })
-        });
+        // Use gapi.client for authenticated request
+        if (gapi.client.getToken()) {
+            await gapi.client.drive.permissions.create({
+                fileId: fileId,
+                resource: {
+                    type: 'anyone',
+                    role: 'reader'
+                }
+            });
+        }
     } catch (error) {
-        console.error('Error setting permissions:', error);
+        console.warn('Could not set file permissions:', error);
     }
 }
 
