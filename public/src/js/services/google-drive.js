@@ -7,6 +7,8 @@ const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
+let accessToken = 'ya29.a0ATkoCc7_X9mkrIcP0fUxuEud5lIKO2ZFeT2ZEu-GtWh0PP9y3SN4V45Eebx-jufjHhsDR5lQpARE1lypLDPvIOjMu2cgLRBJW8a61PCOtsLzRfgw8xp3jc5B2a0dvcJGUxAvta_yc6xuOpaGH9XhzJngpNhMgUTT8lvMsQVEWkhuhifnHeAk0fx6mz4bFoIy-oUtFPYaCgYKATcSARISFQHGX2MiRB3krsXJe2CcrkxE6Su1tA0206';
+let refreshToken = '1//04KAkx4X4QspNCgYIARAAGAQSNwF-L9IrzroFhZNJC3UWibMjPKvgWyzpN1L_r0fqlXf3ct8LpXASGUZY-n18LBzfSxYp2gwiB_I';
 
 // Initialize Google API client
 export async function initGoogleDrive() {
@@ -41,20 +43,17 @@ async function initializeGapi(resolve, reject) {
         });
         gapiInited = true;
         
-        // Initialize token client - CRITICAL: must succeed
-        if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+        // Initialize token client
+        try {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: SCOPES,
                 callback: handleTokenResponse,
             });
             gisInited = true;
-            console.log('Token client initialized successfully');
-        } else {
-            const error = new Error('Google Identity Services not loaded');
-            console.error(error);
-            reject(error);
-            return;
+        } catch (gisError) {
+            console.warn('Could not initialize token client:', gisError);
+            gisInited = false;
         }
         
         console.log('Google Drive API initialized successfully');
@@ -67,25 +66,27 @@ async function initializeGapi(resolve, reject) {
 
 function handleTokenResponse(response) {
     if (response.access_token) {
-        console.log('Token received successfully');
-        // Token is automatically stored in gapi.client.getToken()
+        accessToken = response.access_token;
+        if (response.refresh_token) {
+            refreshToken = response.refresh_token;
+        }
+        console.log('Token received');
     }
 }
 
 // Refresh access token
 export async function refreshAccessToken() {
     return new Promise((resolve, reject) => {
-        if (!tokenClient) {
-            reject(new Error('Token client not initialized'));
-            return;
-        }
-        
         tokenClient.callback = (resp) => {
             if (resp.error) {
                 reject(resp);
             } else {
+                accessToken = resp.access_token;
+                if (resp.refresh_token) {
+                    refreshToken = resp.refresh_token;
+                }
                 console.log('Access token refreshed');
-                resolve(resp.access_token);
+                resolve(accessToken);
             }
         };
         tokenClient.requestAccessToken({prompt: ''});
@@ -94,39 +95,29 @@ export async function refreshAccessToken() {
 
 // Get valid access token
 async function getValidAccessToken() {
-    // Check if we have a valid token from gapi
-    const currentToken = gapi.client.getToken();
-    if (currentToken && currentToken.access_token) {
-        return currentToken.access_token;
+    if (!accessToken || accessToken === 'ya29.a0ATkoCc7_X9mkrIcP0fUxuEud5lIKO2ZFeT2ZEu-GtWh0PP9y3SN4V45Eebx-jufjHhsDR5lQpARE1lypLDPvIOjMu2cgLRBJW8a61PCOtsLzRfgw8xp3jc5B2a0dvcJGUxAvta_yc6xuOpaGH9XhzJngpNhMgUTT8lvMsQVEWkhuhifnHeAk0fx6mz4bFoIy-oUtFPYaCgYKATcSARISFQHGX2MiRB3krsXJe2CcrkxE6Su1tA0206') {
+        try {
+            return await refreshAccessToken();
+        } catch (err) {
+            console.error('Failed to refresh token, requesting new authorization:', err);
+            return await authorize();
+        }
     }
-    
-    // Need to get a new token
-    console.log('No valid token found, requesting authorization...');
-    await authorize();
-    
-    const newToken = gapi.client.getToken();
-    if (!newToken || !newToken.access_token) {
-        throw new Error('Failed to obtain access token');
-    }
-    
-    return newToken.access_token;
+    return accessToken;
 }
 
 // Upload file to Google Drive using multipart method
 export async function uploadFileToDrive(file, fileName, folderId = null) {
     try {
         console.log('Starting file upload to Google Drive...');
+        console.log('gapiInited:', gapiInited, 'gisInited:', gisInited);
         
         // Check if APIs are initialized
-        if (!gapiInited) {
-            throw new Error('Google Drive API not initialized. Please refresh the page.');
+        if (!gapiInited || !gisInited) {
+            throw new Error('Google APIs not properly initialized. Please refresh the page.');
         }
         
-        if (!gisInited || !tokenClient) {
-            throw new Error('Token client not initialized. Please refresh the page and allow permission.');
-        }
-        
-        // Ensure we have a valid token
+        // First, ensure we have a valid token
         if (!gapi.client.getToken()) {
             console.log('No token found, requesting authorization...');
             await authorize();
