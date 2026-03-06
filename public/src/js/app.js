@@ -1243,14 +1243,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('User logged in with role:', role);
                     hideLoader();
                     renderMainContent(user, role);
-                    
-                    // Sync Google Drive folders to Firestore sections
-                    if (role === 'ADMIN') {
-                        console.log('Admin user logged in, syncing Google Drive folders...');
-                        syncDriveFoldersToSections().catch(err => {
-                            console.warn('Failed to sync Drive folders:', err);
-                        });
-                    }
                 },
                 () => {
                     console.log('User logged out');

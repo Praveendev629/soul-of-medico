@@ -251,6 +251,12 @@ export async function syncDriveFoldersToSections() {
             return;
         }
         
+        // Check if Google Drive API is initialized
+        if (!gapiInited) {
+            console.warn('Google Drive API not initialized, skipping sync');
+            return;
+        }
+        
         // List all folders from Drive
         const folders = await listDriveFolders();
         if (folders.length === 0) {
@@ -260,21 +266,19 @@ export async function syncDriveFoldersToSections() {
         
         console.log(`Syncing ${folders.length} folders from Google Drive...`);
         
+        // Import Firestore functions once at the top
+        const { collection, query, where, getDocs, addDoc } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js');
+        
         // For each folder, create a section in Firestore if it doesn't exist
         for (const folder of folders) {
             try {
-                // Query if section with this driveFolderId already exists
-                const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js');
-                
                 const sectionsRef = collection(window.db, 'sections');
                 const q = query(sectionsRef, where('driveFolderId', '==', folder.id));
                 const querySnapshot = await getDocs(q);
                 
                 if (querySnapshot.empty) {
                     // Section doesn't exist, create it
-                    const { addDoc } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js');
-                    
-                    const newSection = await addDoc(sectionsRef, {
+                    await addDoc(sectionsRef, {
                         name: folder.name,
                         driveFolderId: folder.id,
                         parentId: null,
@@ -291,8 +295,10 @@ export async function syncDriveFoldersToSections() {
         }
         
         console.log('Drive folders sync completed');
+        return true;
     } catch (error) {
         console.error('Error syncing Drive folders:', error);
+        throw error;
     }
 }
 
