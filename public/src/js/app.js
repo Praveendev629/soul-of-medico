@@ -361,10 +361,22 @@ function showAddSectionModal(parentId = null) {
             
             alert('Section created successfully!');
             document.body.removeChild(modalContainer);
+            
             if (parentId) {
+                // If creating subsection, reload the parent section
                 openSection(parentId, 'Section');
             } else {
-                loadSections('sections-container', null);
+                // If creating root section, navigate to files tab and reload sections
+                const filesTab = document.querySelector('[data-target="files"]');
+                if (filesTab) {
+                    filesTab.click();
+                } else {
+                    // Fallback: reload sections if container exists
+                    const container = document.getElementById('sections-container');
+                    if (container) {
+                        loadSections('sections-container', null);
+                    }
+                }
             }
         } catch (error) {
             console.error('Section creation error:', error);
