@@ -6,13 +6,13 @@ import { getFunctions } from "https://www.gstatic.com/firebasejs/10.8.1/firebase
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCU-iriPdLHhm8VhDkSOvRfwJmWRm3riN0",
-    authDomain: "soul-of-medico-001.firebaseapp.com",
-    projectId: "soul-of-medico-001",
-    storageBucket: "soul-of-medico-001.appspot.com",
-    messagingSenderId: "233619301443",
-    appId: "1:233619301443:web:1dae184db8473dfcd960f6",
-    measurementId: "G-RVXL86WYY5"
+    apiKey: "AIzaSyCmn2ZmvawQZKMc0mfMVV--K3ffZ7IyThg",
+    authDomain: "soul-of-medico-f61bd.firebaseapp.com",
+    projectId: "soul-of-medico-f61bd",
+    storageBucket: "soul-of-medico-f61bd.firebasestorage.app",
+    messagingSenderId: "1046648330898",
+    appId: "1:1046648330898:web:e1f97900cbcb3c8731644b",
+    measurementId: "G-2DGGTZ25LK"
 };
 
 // Initialize Firebase
