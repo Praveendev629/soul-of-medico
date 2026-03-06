@@ -2,7 +2,7 @@ import './firebase-init.js';
 import { login, logout, initAuthListener, signInWithEmail, signUpWithEmail, resetPassword, updateUserProfile } from './auth/auth.js';
 import { getVideosFromFirestore, syncYouTubeVideos, fetchYouTubeVideos, getUnreadNotificationsCount, markNotificationAsRead } from './services/youtube.js';
 import { loadSectionsFromFirestore, addSectionToFirestore, updateSectionInFirestore, deleteSectionFromFirestore, loadFilesFromFirestore, addFileToFirestore, updateFileInFirestore, deleteFileFromFirestore } from './services/sections.js';
-import { initGoogleDrive, syncDriveFoldersToSections } from './services/google-drive.js';
+import { initGoogleDrive } from './services/google-drive.js';
 
 const appContainer = document.getElementById('app');
 const globalLoader = document.getElementById('global-loader');
@@ -1146,9 +1146,9 @@ bottomNavItems.forEach(item => {
                                 <span class="material-icons-round" style="margin-right: 8px;">add_circle</span>
                                 Add New Section
                             </button>
-                            <button id="syncDriveBtn" class="btn" style="padding: 12px 24px; background: var(--color-success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 0.9rem; font-weight: 500; display: inline-flex; align-items: center; margin-left: var(--spacing-md);">
+                            <button id="syncDriveBtn" class="btn" style="padding: 12px 24px; background: var(--color-success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; margin-left: var(--spacing-md);">
                                 <span class="material-icons-round" style="margin-right: 8px;">cloud_sync</span>
-                                Sync from Drive
+                                Sync Google Drive
                             </button>
                         </div>
                     `;
@@ -1165,6 +1165,24 @@ bottomNavItems.forEach(item => {
                 try {
                     await loadSections('sections-container', null);
 
+                    // Auto-sync Google Drive folders for admins
+                    if (currentRole === 'ADMIN' && currentUser) {
+                        try {
+                            console.log('Auto-syncing Google Drive folders...');
+                            const { syncDriveFoldersToSections } = await import('./services/google-drive.js');
+                            const syncResult = await syncDriveFoldersToSections(currentUser.uid);
+                            
+                            if (syncResult.synced > 0) {
+                                console.log(`Synced ${syncResult.synced} new folders from Google Drive`);
+                                // Reload sections to show newly synced folders
+                                await loadSections('sections-container', null);
+                            }
+                        } catch (syncError) {
+                            console.warn('Google Drive sync not available or failed:', syncError);
+                            // Don't block UI if sync fails
+                        }
+                    }
+
                     // Setup Add Section button after loading
                     if (currentRole === 'ADMIN') {
                         const addSectionBtn = document.getElementById('addSectionBtn');
@@ -1172,25 +1190,34 @@ bottomNavItems.forEach(item => {
                             addSectionBtn.onclick = () => showAddSectionModal(null);
                         }
                         
-                        // Setup Sync Drive button
                         const syncDriveBtn = document.getElementById('syncDriveBtn');
                         if (syncDriveBtn) {
                             syncDriveBtn.onclick = async () => {
-                                syncDriveBtn.disabled = true;
-                                syncDriveBtn.textContent = '⏳ Syncing...';
                                 try {
-                                    await syncDriveFoldersToSections();
-                                    await loadSections('sections-container', null);
-                                    alert('Drive folders synced successfully!');
-                                } catch (error) {
-                                    alert('Failed to sync: ' + error.message);
-                                } finally {
+                                    syncDriveBtn.disabled = true;
+                                    syncDriveBtn.textContent = 'Syncing...';
+                                    
+                                    const { syncDriveFoldersToSections } = await import('./services/google-drive.js');
+                                    const syncResult = await syncDriveFoldersToSections(currentUser.uid);
+                                    
+                                    if (syncResult.synced > 0) {
+                                        alert(`✓ Synced ${syncResult.synced} folder(s) from Google Drive:\n${syncResult.folders.join(', ')}`);
+                                        // Reload sections
+                                        await loadSections('sections-container', null);
+                                    } else {
+                                        alert('No new folders to sync. All folders already synced.');
+                                    }
+                                    
                                     syncDriveBtn.disabled = false;
-                                    syncDriveBtn.innerHTML = '<span class="material-icons-round" style="margin-right: 8px;">cloud_sync</span> Sync from Drive';
+                                    syncDriveBtn.innerHTML = '<span class="material-icons-round" style="margin-right: 8px;">cloud_sync</span>Sync Google Drive';
+                                } catch (error) {
+                                    console.error('Sync error:', error);
+                                    alert('Failed to sync: ' + error.message);
+                                    syncDriveBtn.disabled = false;
+                                    syncDriveBtn.innerHTML = '<span class="material-icons-round" style="margin-right: 8px;">cloud_sync</span>Sync Google Drive';
                                 }
                             };
                         }
-                    }                        }
                     }
                 } catch (error) {
                     console.error('Error loading sections:', error);

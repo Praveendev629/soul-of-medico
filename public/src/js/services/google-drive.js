@@ -209,99 +209,6 @@ function authorize() {
     });
 }
 
-// List folders in Drive
-export async function listDriveFolders(parentFolderId = null) {
-    try {
-        if (!gapi.client.getToken()) {
-            await authorize();
-        }
-        
-        let query = "mimeType = 'application/vnd.google-apps.folder' and trashed = false";
-        if (parentFolderId) {
-            query += ` and '${parentFolderId}' in parents`;
-        }
-        
-        const response = await gapi.client.drive.files.list({
-            q: query,
-            fields: 'files(id, name, webViewLink, createdTime, owners)',
-            orderBy: 'createdTime desc',
-            pageSize: 100
-        });
-        
-        console.log(`Found ${response.result.files?.length || 0} folders in Google Drive`);
-        return response.result.files || [];
-    } catch (error) {
-        console.error('Error listing folders:', error);
-        return [];
-    }
-}
-
-// Sync Google Drive folders to Firestore sections
-export async function syncDriveFoldersToSections() {
-    try {
-        console.log('Starting Google Drive folders sync...');
-        
-        if (!window.auth || !window.auth.currentUser) {
-            console.warn('No authenticated user, skipping Drive sync');
-            return;
-        }
-        
-        if (!window.db) {
-            console.error('Firestore not initialized');
-            return;
-        }
-        
-        // Check if Google Drive API is initialized
-        if (!gapiInited) {
-            console.warn('Google Drive API not initialized, skipping sync');
-            return;
-        }
-        
-        // List all folders from Drive
-        const folders = await listDriveFolders();
-        if (folders.length === 0) {
-            console.log('No folders found in Google Drive');
-            return;
-        }
-        
-        console.log(`Syncing ${folders.length} folders from Google Drive...`);
-        
-        // Import Firestore functions once at the top
-        const { collection, query, where, getDocs, addDoc } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js');
-        
-        // For each folder, create a section in Firestore if it doesn't exist
-        for (const folder of folders) {
-            try {
-                const sectionsRef = collection(window.db, 'sections');
-                const q = query(sectionsRef, where('driveFolderId', '==', folder.id));
-                const querySnapshot = await getDocs(q);
-                
-                if (querySnapshot.empty) {
-                    // Section doesn't exist, create it
-                    await addDoc(sectionsRef, {
-                        name: folder.name,
-                        driveFolderId: folder.id,
-                        parentId: null,
-                        createdBy: window.auth.currentUser.uid,
-                        createdAt: new Date().toISOString(),
-                        syncedFromDrive: true
-                    });
-                    
-                    console.log(`Created section "${folder.name}" from Drive folder`);
-                }
-            } catch (error) {
-                console.warn(`Could not sync folder "${folder.name}":`, error);
-            }
-        }
-        
-        console.log('Drive folders sync completed');
-        return true;
-    } catch (error) {
-        console.error('Error syncing Drive folders:', error);
-        throw error;
-    }
-}
-
 // List files in Drive
 export async function listDriveFiles(folderId = null) {
     try {
@@ -369,6 +276,97 @@ export async function createFolderInDrive(folderName, parentFolderId = null) {
         return response.result;
     } catch (error) {
         console.error('Error creating folder:', error);
+        throw error;
+    }
+}
+
+// Fetch all folders from Google Drive
+export async function listDriveFolders(parentFolderId = null) {
+    try {
+        if (!gapi.client.getToken()) {
+            await authorize();
+        }
+        
+        let query = "mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+        if (parentFolderId) {
+            query += ` and '${parentFolderId}' in parents`;
+        }
+        
+        const response = await gapi.client.drive.files.list({
+            q: query,
+            fields: 'files(id, name, createdTime, modifiedTime, webViewLink)',
+            orderBy: 'name',
+            pageSize: 1000
+        });
+        
+        console.log(`Found ${(response.result.files || []).length} folders in Google Drive`);
+        return response.result.files || [];
+    } catch (error) {
+        console.error('Error listing folders:', error);
+        return [];
+    }
+}
+
+// Sync Google Drive folders to Firestore sections
+export async function syncDriveFoldersToSections(userId) {
+    try {
+        console.log('Starting Google Drive folder sync for user:', userId);
+        
+        // Make sure we're authorized
+        if (!gapi.client.getToken()) {
+            await authorize();
+        }
+        
+        // Get all folders from Google Drive
+        const driveFolders = await listDriveFolders();
+        
+        if (driveFolders.length === 0) {
+            console.log('No folders found in Google Drive root');
+            return { synced: 0, folders: [] };
+        }
+        
+        console.log(`Syncing ${driveFolders.length} folders from Google Drive`);
+        
+        // Import Firestore functions
+        const { loadSectionsFromFirestore, addSectionToFirestore } = await import('./sections.js');
+        
+        // Get existing sections with driveFolderId
+        const existingSections = await loadSectionsFromFirestore(null);
+        const existingFolderIds = new Set(existingSections.map(s => s.driveFolderId).filter(Boolean));
+        
+        let syncedCount = 0;
+        const syncedFolders = [];
+        
+        // Add new folders as sections
+        for (const folder of driveFolders) {
+            // Skip if already synced
+            if (existingFolderIds.has(folder.id)) {
+                console.log(`Folder "${folder.name}" already synced, skipping`);
+                continue;
+            }
+            
+            try {
+                await addSectionToFirestore({
+                    name: folder.name,
+                    parentId: null,
+                    driveFolderId: folder.id,
+                    createdBy: userId,
+                    syncedFromDrive: true,
+                    driveModifiedTime: folder.modifiedTime
+                });
+                
+                console.log(`✓ Synced folder: "${folder.name}" (${folder.id})`);
+                syncedFolders.push(folder.name);
+                syncedCount++;
+            } catch (error) {
+                console.error(`Failed to sync folder "${folder.name}":`, error);
+            }
+        }
+        
+        console.log(`Sync complete: ${syncedCount}/${driveFolders.length} folders synced`);
+        return { synced: syncedCount, folders: syncedFolders };
+    } catch (error) {
+        console.error('Error syncing Drive folders:', error);
         throw error;
     }
 }
