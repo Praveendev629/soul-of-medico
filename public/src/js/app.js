@@ -2,7 +2,7 @@ import './firebase-init.js';
 import { login, logout, initAuthListener, signInWithEmail, signUpWithEmail, resetPassword, updateUserProfile } from './auth/auth.js';
 import { getVideosFromFirestore, syncYouTubeVideos, fetchYouTubeVideos, getUnreadNotificationsCount, markNotificationAsRead } from './services/youtube.js';
 import { loadSectionsFromFirestore, addSectionToFirestore, updateSectionInFirestore, deleteSectionFromFirestore, loadFilesFromFirestore, addFileToFirestore, updateFileInFirestore, deleteFileFromFirestore } from './services/sections.js';
-import { initGoogleDrive } from './services/google-drive.js';
+import { initGoogleDrive, syncDriveFoldersToSections } from './services/google-drive.js';
 
 const appContainer = document.getElementById('app');
 const globalLoader = document.getElementById('global-loader');
@@ -1146,6 +1146,10 @@ bottomNavItems.forEach(item => {
                                 <span class="material-icons-round" style="margin-right: 8px;">add_circle</span>
                                 Add New Section
                             </button>
+                            <button id="syncDriveBtn" class="btn" style="padding: 12px 24px; background: var(--color-success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 0.9rem; font-weight: 500; display: inline-flex; align-items: center; margin-left: var(--spacing-md);">
+                                <span class="material-icons-round" style="margin-right: 8px;">cloud_sync</span>
+                                Sync from Drive
+                            </button>
                         </div>
                     `;
                 }
@@ -1167,6 +1171,26 @@ bottomNavItems.forEach(item => {
                         if (addSectionBtn) {
                             addSectionBtn.onclick = () => showAddSectionModal(null);
                         }
+                        
+                        // Setup Sync Drive button
+                        const syncDriveBtn = document.getElementById('syncDriveBtn');
+                        if (syncDriveBtn) {
+                            syncDriveBtn.onclick = async () => {
+                                syncDriveBtn.disabled = true;
+                                syncDriveBtn.textContent = '⏳ Syncing...';
+                                try {
+                                    await syncDriveFoldersToSections();
+                                    await loadSections('sections-container', null);
+                                    alert('Drive folders synced successfully!');
+                                } catch (error) {
+                                    alert('Failed to sync: ' + error.message);
+                                } finally {
+                                    syncDriveBtn.disabled = false;
+                                    syncDriveBtn.innerHTML = '<span class="material-icons-round" style="margin-right: 8px;">cloud_sync</span> Sync from Drive';
+                                }
+                            };
+                        }
+                    }                        }
                     }
                 } catch (error) {
                     console.error('Error loading sections:', error);
@@ -1219,6 +1243,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('User logged in with role:', role);
                     hideLoader();
                     renderMainContent(user, role);
+                    
+                    // Sync Google Drive folders to Firestore sections
+                    if (role === 'ADMIN') {
+                        console.log('Admin user logged in, syncing Google Drive folders...');
+                        syncDriveFoldersToSections().catch(err => {
+                            console.warn('Failed to sync Drive folders:', err);
+                        });
+                    }
                 },
                 () => {
                     console.log('User logged out');
