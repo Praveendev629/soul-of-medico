@@ -1,0 +1,9 @@
+/* AI Page Styles */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+nav a.active {
+    color: #1d4ed8;
+    font-weight: bold;
+}
