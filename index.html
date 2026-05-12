@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soul of Medico - NEET Aspirants Platform</title>
+    <meta name="description" content="Complete PWA platform for NEET medical aspirants">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Soul of Medico">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="assets/logo.jpeg">
+    <link rel="apple-touch-icon" href="assets/logo.jpeg">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Custom Styles -->
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(134, 239, 172, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(134, 239, 172, 0.6); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e1b4b 100%);
+        }
+        
+        .logo-container {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+        
+        .loading-dots span {
+            animation: blink 1.4s infinite both;
+        }
+        
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes blink {
+            0%, 60%, 100% { opacity: 0.2; }
+            20% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Background Animation -->
+    <div class="absolute inset-0">
+        <div class="absolute top-20 left-20 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div class="absolute top-40 right-20 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-8 left-40 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 text-center px-4">
+        <!-- Logo Container -->
+        <div class="mb-8 float-animation">
+            <div class="logo-container w-32 h-32 mx-auto rounded-full flex items-center justify-center pulse-glow border-4 border-green-300 overflow-hidden">
+                <!-- Actual Logo Image -->
+                <img src="assets/logo.jpeg" alt="Soul of Medico Logo" class="w-full h-full object-cover">
+            </div>
+        </div>
+
+        <!-- App Title -->
+        <h1 class="text-5xl md:text-7xl font-bold text-white mb-4 tracking-wider">
+            SOUL OF
+        </h1>
+        <h1 class="text-5xl md:text-7xl font-bold text-green-300 mb-8 tracking-wider">
+            MEDICO
+        </h1>
+
+        <!-- Tagline -->
+        <p class="text-xl md:text-2xl text-white/90 mb-12 font-light">
+            Welcome to Soul Of Medico
+        </p>
+
+        <!-- Description -->
+        <p class="text-lg text-white/80 mb-16 max-w-md mx-auto">
+            Your complete NEET preparation platform with MCQ practice, study materials, and progress tracking
+        </p>
+
+        <!-- Next Button -->
+        <button id="nextBtn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-4 px-12 rounded-full text-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 pulse-glow">
+            Get Started
+            <svg class="inline-block ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+            </svg>
+        </button>
+
+        <!-- Skip Link -->
+        <div class="mt-8">
+            <a href="#" id="skipLink" class="text-white/60 hover:text-white/80 transition-colors text-sm">
+                Skip introduction
+            </a>
+        </div>
+
+        <!-- Version Info -->
+        <div class="absolute bottom-8 left-0 right-0 text-center">
+            <p class="text-white/60 text-sm">
+                Version 1.0.0 • NEET Aspirants Platform
+            </p>
+        </div>
+    </div>
+
+    <!-- Service Worker Registration -->
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registration successful:', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New content is available
+                                    if (confirm('New version available! Reload to update?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then((permission) => {
+                console.log('Notification permission:', permission);
+            });
+        }
+    </script>
+
+    <!-- Splash Screen JavaScript -->
+    <script>
+        // Animate progress bar
+        setTimeout(() => {
+            const progressBar = document.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.style.width = '100%';
+            }
+        }, 500);
+
+        // Next button functionality
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            console.log('Get Started clicked - navigating to onboarding');
+            window.location.href = '/onboarding.html';
+        });
+
+        // Skip link functionality
+        document.getElementById('skipLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Skip introduction clicked');
+            window.location.href = '/onboarding.html';
+        });
+
+        // Auto-redirect after 10 seconds if no action
+        setTimeout(() => {
+            console.log('Auto-redirecting to main app after timeout');
+            // For now, just log. In future, this will redirect to main.html
+            console.log('Main app would load here automatically');
+        }, 10000);
+
+        // Add blob animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes blob {
+                0% { transform: translate(0px, 0px) scale(1); }
+                33% { transform: translate(30px, -50px) scale(1.1); }
+                66% { transform: translate(-20px, 20px) scale(0.9); }
+                100% { transform: translate(0px, 0px) scale(1); }
+            }
+            .animate-blob {
+                animation: blob 7s infinite;
+            }
+            .animation-delay-2000 {
+                animation-delay: 2s;
+            }
+            .animation-delay-4000 {
+                animation-delay: 4s;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

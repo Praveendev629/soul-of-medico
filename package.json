@@ -1,0 +1,28 @@
+{
+  "name": "soul-of-medico",
+  "version": "1.0.0",
+  "description": "A complete PWA for NEET aspirants - Soul of Medico",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve . -l 3000",
+    "build": "echo 'Build process completed'",
+    "start": "npx serve . -l 3000",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "pwa",
+    "neet",
+    "medical",
+    "education",
+    "aspirants",
+    "soul-of-medico"
+  ],
+  "author": "Soul of Medico Team",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "dependencies": {
+    "workbox-sw": "^7.0.0"
+  }
+}
