@@ -85,17 +85,29 @@
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        let redirectStarted = false;
+
+        function showPage() {
+            if (!redirectStarted) {
+                document.body.classList.add('page-ready');
+            }
+        }
 
         auth.onAuthStateChanged((user) => {
             if (user) {
+                redirectStarted = true;
                 window.location.href = 'home/home.html';
                 return;
             }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                document.body.classList.add('page-ready');
-            });
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', showPage);
+            } else {
+                showPage();
+            }
         });
+
+        setTimeout(showPage, 1500);
     </script>
 </head>
 <body class="gradient-bg min-h-screen flex items-center justify-center overflow-hidden">
