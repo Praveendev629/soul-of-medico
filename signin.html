@@ -187,7 +187,7 @@
             if (user) {
                 console.log('User already signed in:', user.displayName);
                 alert('Already signed in as ' + user.displayName + '. Redirecting to home...');
-                window.location.href = '/index.html';
+                window.location.href = 'home/home.html';
             }
         });
 
@@ -208,13 +208,14 @@
             // Configure Google Provider
             const provider = new firebase.auth.GoogleAuthProvider();
             
-            // Sign in with Google
-            auth.signInWithPopup(provider)
+            // Use local persistence so the user remains signed in across refreshes and browser restarts
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+                .then(() => auth.signInWithPopup(provider))
                 .then((result) => {
                     console.log('Firebase Google Sign In successful:', result.user);
                     alert('Welcome to Soul of Medico, ' + result.user.displayName + '!');
                     // Navigate to home page
-                    window.location.href = '/index.html';
+                    window.location.href = 'home/home.html';
                 })
                 .catch((error) => {
                     console.error('Firebase Sign In error:', error);

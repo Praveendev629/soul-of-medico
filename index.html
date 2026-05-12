@@ -100,40 +100,9 @@
         </p>
 
         <!-- Description -->
-        <p class="text-lg text-white/80 mb-8 max-w-md mx-auto">
+        <p class="text-lg text-white/80 mb-12 max-w-md mx-auto">
             Your complete NEET preparation platform with MCQ practice, study materials, and progress tracking.
         </p>
-
-        <!-- Welcome Panel -->
-        <div id="welcomeCard" class="mx-auto mb-12 max-w-3xl rounded-[32px] border border-white/15 bg-white/10 p-8 text-left shadow-2xl backdrop-blur-xl hidden">
-            <p id="homepageSubtitle" class="text-sm uppercase tracking-[0.35em] text-green-200/90 mb-3">Personalized Dashboard</p>
-            <h2 id="userGreeting" class="text-3xl md:text-4xl font-semibold text-white">Hello, Aspirant!</h2>
-            <p id="welcomeMessage" class="mt-4 text-white/80 max-w-xl">
-                You're signed in and ready to continue your NEET journey. Explore your progress, practice more questions, and stay ahead.
-            </p>
-
-            <div class="mt-8 grid gap-4 md:grid-cols-3">
-                <div class="rounded-3xl border border-white/10 bg-slate-950/40 p-4 text-white shadow-xl">
-                    <p class="text-sm uppercase text-slate-300">Completed</p>
-                    <p class="mt-3 text-3xl font-bold">12</p>
-                    <p class="mt-2 text-sm text-slate-400">practice sessions</p>
-                </div>
-                <div class="rounded-3xl border border-white/10 bg-slate-950/40 p-4 text-white shadow-xl">
-                    <p class="text-sm uppercase text-slate-300">Streak</p>
-                    <p class="mt-3 text-3xl font-bold">5</p>
-                    <p class="mt-2 text-sm text-slate-400">days in a row</p>
-                </div>
-                <div class="rounded-3xl border border-white/10 bg-slate-950/40 p-4 text-white shadow-xl">
-                    <p class="text-sm uppercase text-slate-300">Focus</p>
-                    <p class="mt-3 text-3xl font-bold">+8%</p>
-                    <p class="mt-2 text-sm text-slate-400">weekly improvement</p>
-                </div>
-            </div>
-
-            <button id="signOutBtn" class="mt-8 inline-flex items-center justify-center rounded-full bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
-                Sign Out
-            </button>
-        </div>
 
         <!-- Next Button -->
         <button id="nextBtn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-4 px-12 rounded-full text-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 pulse-glow">
@@ -210,35 +179,11 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
-        const welcomeCard = document.getElementById('welcomeCard');
-        const userGreeting = document.getElementById('userGreeting');
-        const welcomeMessage = document.getElementById('welcomeMessage');
-        const signOutBtn = document.getElementById('signOutBtn');
-
-        function updateUserDisplay(user) {
-            if (!user) {
-                welcomeCard.classList.add('hidden');
-                return;
-            }
-
-            const name = user.displayName || user.email || 'Aspirant';
-            userGreeting.textContent = `Welcome back, ${name}!`;
-            welcomeMessage.textContent = 'You are now signed in. Continue your NEET preparation with practice tests, notes, and performance tracking.';
-            welcomeCard.classList.remove('hidden');
-        }
-
         auth.onAuthStateChanged((user) => {
-            updateUserDisplay(user);
-        });
-
-        signOutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-                alert('You have been signed out.');
-                window.location.href = '/signin.html';
-            }).catch((error) => {
-                console.error('Sign out failed:', error);
-                alert('Unable to sign out. Please try again.');
-            });
+            if (user) {
+                console.log('User already signed in, redirecting to home page');
+                window.location.href = 'home/home.html';
+            }
         });
     </script>
 

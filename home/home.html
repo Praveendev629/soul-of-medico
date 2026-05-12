@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soul of Medico - Home</title>
+    <meta name="description" content="Your signed-in dashboard for Soul of Medico">
+    <link rel="icon" type="image/jpeg" href="../assets/logo.jpeg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.35), transparent 25%),
+                        radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.25), transparent 20%),
+                        #020617;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            backdrop-filter: blur(20px);
+        }
+        .pulse-ring {
+            animation: pulse 2.8s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: translateY(0) scale(1); box-shadow: 0 0 0 rgba(34, 197, 94, 0.15); }
+            50% { transform: translateY(-4px) scale(1.01); box-shadow: 0 0 40px rgba(34, 197, 94, 0.18); }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100">
+    <div class="relative overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+        <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.16),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(34,197,94,0.12),_transparent_20%)]"></div>
+        <div class="relative z-10 max-w-6xl mx-auto">
+            <header class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-10">
+                <div>
+                    <p class="text-sm uppercase tracking-[0.35em] text-cyan-300/80">Soul of Medico</p>
+                    <h1 class="mt-4 text-4xl md:text-5xl font-extrabold text-white">Your NEET study dashboard</h1>
+                    <p class="mt-4 max-w-2xl text-slate-300 text-base md:text-lg">Stay signed in across refreshes, access your personal study hub, and continue where you left off.</p>
+                </div>
+                <button id="signOutBtn" class="inline-flex items-center justify-center rounded-full bg-slate-800/90 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/30 transition hover:bg-slate-700/90">Sign Out</button>
+            </header>
+
+            <section class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+                <div class="glass-card rounded-[32px] p-8 shadow-2xl shadow-slate-900/30">
+                    <div class="flex items-center gap-4">
+                        <div class="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-400 via-sky-500 to-indigo-500 text-white pulse-ring">
+                            <span class="text-2xl font-bold">Hi</span>
+                        </div>
+                        <div>
+                            <p class="text-sm uppercase tracking-[0.35em] text-cyan-300/75">Welcome back</p>
+                            <h2 id="userName" class="mt-2 text-3xl font-bold text-white">Aspirant</h2>
+                        </div>
+                    </div>
+                    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+                        <div class="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
+                            <p class="text-sm text-slate-400">Signed in as</p>
+                            <p id="userEmail" class="mt-3 text-lg font-semibold text-white">loading...</p>
+                        </div>
+                        <div class="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
+                            <p class="text-sm text-slate-400">Member since</p>
+                            <p id="memberSince" class="mt-3 text-lg font-semibold text-white">today</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+                        <h3 class="text-lg font-semibold text-white">Quick actions</h3>
+                        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                            <button class="rounded-3xl bg-cyan-500/20 px-4 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/30">Practice MCQs</button>
+                            <button class="rounded-3xl bg-emerald-500/20 px-4 py-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/30">Study Materials</button>
+                            <button class="rounded-3xl bg-violet-500/20 px-4 py-3 text-sm font-semibold text-violet-100 transition hover:bg-violet-500/30">Progress Report</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-[32px] p-8 shadow-2xl shadow-slate-900/30">
+                    <div class="space-y-6">
+                        <div class="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+                            <p class="text-sm uppercase tracking-[0.35em] text-slate-400">Daily goal</p>
+                            <p class="mt-4 text-3xl font-bold text-white">Complete 30 questions</p>
+                            <p class="mt-3 text-slate-300">Stay consistent each day and review explanations after each session.</p>
+                        </div>
+                        <div class="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+                            <p class="text-sm uppercase tracking-[0.35em] text-slate-400">Today's progress</p>
+                            <div class="mt-5 rounded-3xl bg-slate-900/90 p-4">
+                                <div class="flex items-center justify-between text-sm text-slate-400">
+                                    <span>Study streak</span>
+                                    <span>5 days</span>
+                                </div>
+                                <div class="mt-4 h-3 rounded-full bg-slate-800">
+                                    <div class="h-full w-3/4 rounded-full bg-cyan-500"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+                            <p class="text-sm uppercase tracking-[0.35em] text-slate-400">Need help?</p>
+                            <p class="mt-4 text-slate-300">Visit the resources page or contact support when you need more guidance.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzIPV5K7CD0rLAVMugcck2fIAhD-t7RFQ",
+            authDomain: "soul-of-medico-2-0.firebaseapp.com",
+            projectId: "soul-of-medico-2-0",
+            storageBucket: "soul-of-medico-2-0.firebasestorage.app",
+            messagingSenderId: "536812727833",
+            appId: "1:536812727833:web:cfe2362fabfbec388e8488"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        const userName = document.getElementById('userName');
+        const userEmail = document.getElementById('userEmail');
+        const memberSince = document.getElementById('memberSince');
+        const signOutBtn = document.getElementById('signOutBtn');
+
+        function formatMemberSince(date) {
+            return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(date);
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = '../signin.html';
+                return;
+            }
+
+            const name = user.displayName || user.email || 'Aspirant';
+            const email = user.email || 'user@example.com';
+            const created = user.metadata?.creationTime ? new Date(user.metadata.creationTime) : new Date();
+
+            userName.textContent = `Welcome back, ${name}!`;
+            userEmail.textContent = email;
+            memberSince.textContent = formatMemberSince(created);
+        });
+
+        signOutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = '../signin.html';
+            }).catch((error) => {
+                console.error('Sign-out error:', error);
+                alert('Sign out failed. Please try again.');
+            });
+        });
+    </script>
+</body>
+</html>
