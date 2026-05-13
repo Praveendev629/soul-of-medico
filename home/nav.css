@@ -13,14 +13,21 @@
 }
 
 .page-nav-stage {
-  max-width: 400px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 1rem 1rem 1.5rem;
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(100%, 420px);
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 0 1rem 1.5rem;
+  z-index: 1000;
+  pointer-events: none;
 }
 
 .page-nav-box {
   padding: 0;
+  pointer-events: auto;
 }
 
 .flex-center {
@@ -103,6 +110,10 @@
   background-color: var(--app-content-background-color);
   top: -3rem;
   transition: left 0.4s ease-in, background-color 0.4s, border-color 0.4s;
+}
+
+body {
+  padding-bottom: 140px;
 }
 
 .tab-style1 .flex-center li.follow::before,
