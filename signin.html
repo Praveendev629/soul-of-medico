@@ -165,21 +165,9 @@
 <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
     
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAzIPV5K7CD0rLAVMugcck2fIAhD-t7RFQ",
-            authDomain: "soul-of-medico-2-0.firebaseapp.com",
-            projectId: "soul-of-medico-2-0",
-            storageBucket: "soul-of-medico-2-0.firebasestorage.app",
-            messagingSenderId: "536812727833",
-            appId: "1:536812727833:web:cfe2362fabfbec388e8488"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         console.log('Firebase initialized successfully');
 
         // Check if user is already signed in
