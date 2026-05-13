@@ -102,14 +102,72 @@ body {
 }
 
 .tab-style1 .flex-center li.follow {
-  display: none;
+  position: absolute;
+  border-radius: 100%;
+  width: 60px;
+  height: 60px;
+  border: 10px solid #f9f8fa;
+  background-color: #f9f8fa;
+  top: -15px;
+  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s, border-color 0.4s;
+  z-index: 10;
+}
+
+.tab-style1 .flex-center li.follow::before,
+.tab-style1 .flex-center li.follow::after {
+  content: "";
+  position: absolute;
+  top: 27px;
+  width: 20px;
+  height: 20px;
+  background-color: transparent;
+  box-sizing: border-box;
+  transition: border-color 0.4s;
+}
+
+.tab-style1 .flex-center li.follow::after {
+  border-top-left-radius: 100%;
+  right: -27px;
+  border-top: 11px solid #f9f8fa;
+}
+
+.tab-style1 .flex-center li.follow::before {
+  left: -27px;
+  border-top-right-radius: 100%;
+  border-top: 11px solid #f9f8fa;
+}
+
+.tab-style1 .flex-center li:nth-child(1).active ~ .follow {
+  left: 0;
+  z-index: 5;
+}
+
+.tab-style1 .flex-center li:nth-child(2).active ~ .follow {
+  left: calc(100% / 5 - 60px + 48px);
+  z-index: 5;
+}
+
+.tab-style1 .flex-center li:nth-child(3).active ~ .follow {
+  left: calc(2 * 100% / 5 - 60px + 48px);
+  z-index: 5;
+}
+
+.tab-style1 .flex-center li:nth-child(4).active ~ .follow {
+  left: calc(3 * 100% / 5 - 60px + 48px);
+  z-index: 5;
+}
+
+.tab-style1 .flex-center li:nth-child(5).active ~ .follow {
+  left: calc(4 * 100% / 5 - 60px + 48px);
+  z-index: 5;
 }
 
 .tab-style1 .flex-center li.active {
   color: var(--accent-color);
-  background-color: rgba(31, 168, 245, 0.12);
+  background-color: transparent;
   transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(31, 168, 245, 0.25);
+  box-shadow: none;
+  z-index: 20;
 }
 
 /* Responsive: Mobile */
