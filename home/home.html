@@ -14,6 +14,10 @@
             min-height: 100vh;
         }
 
+        body:not(.home-page) .profile-bar {
+            display: none !important;
+        }
+
         .profile-bar {
             position: fixed;
             top: 1rem;
@@ -167,7 +171,7 @@
     </style>
    
 </head>
-<body class="bg-blue-50 text-blue-900 min-h-screen pb-24">
+<body class="bg-blue-50 text-blue-900 min-h-screen pb-24 home-page">
     <!-- Firebase Auth Check -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
