@@ -51,6 +51,7 @@
 <style>
 body{
     padding-bottom:90px;
+    opacity: 1;
 }
 
 .navigation{
@@ -94,6 +95,7 @@ body{
     width:100%;
     text-decoration:none;
     cursor: pointer;
+    user-select: none;
 }
 
 .navigation ul li a .icon{
@@ -102,7 +104,7 @@ body{
     line-height:75px;
     font-size:24px;
     text-align:center;
-    transition: color 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     color:#2563eb;
     will-change: transform, color;
 }
@@ -114,7 +116,7 @@ body{
     color:#2563eb;
     transform:translateY(20px);
     opacity:0;
-    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     will-change: opacity, transform;
     pointer-events: none;
 }
@@ -137,7 +139,7 @@ body{
     background:#2563eb;
     border-radius:50%;
     box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     will-change: transform;
 }
 </style>
@@ -189,6 +191,28 @@ const indicator = document.querySelector('.indicator');
 let isAnimating = false;
 let currentIndex = 0;
 
+// Create smooth transition overlay
+function createTransitionOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'page-transition';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 999;
+        transition: opacity 0.25s ease-in-out;
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+const transitionOverlay = createTransitionOverlay();
+
 function updateIndicator(el){
     const index = Array.from(list).indexOf(el);
     const translateX = index * 100;
@@ -211,7 +235,6 @@ function setActive(item){
     currentIndex = newIndex;
     updateIndicator(item);
     
-    // Re-enable after animation
     setTimeout(() => {
         isAnimating = false;
     }, 350);
@@ -221,39 +244,55 @@ list.forEach((item, index) => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
         setActive(item);
-        // Navigate after animation completes
-        setTimeout(() => {
-            const link = item.querySelector('a');
-            if(link && link.href){
-                window.location.href = link.href;
-            }
-        }, 175);
+        
+        const link = item.querySelector('a');
+        if(link && link.href){
+            setTimeout(() => {
+                transitionOverlay.style.opacity = '1';
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 150);
+            }, 175);
+        }
     });
 });
 
-// Initialize on load
+// Smooth page entrance
 window.addEventListener('load', () => {
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.4s ease-in-out';
+    
     const active = document.querySelector('.list.active');
     if(active){
         currentIndex = Array.from(list).indexOf(active);
         updateIndicator(active);
     }
+    
+    // Fade in page
+    setTimeout(() => {
+        document.body.style.opacity = '1';
+        transitionOverlay.style.opacity = '0';
+    }, 50);
 });
 
-// Restore active state based on current page
-window.addEventListener('load', () => {
-    const currentPage = window.location.pathname.split('/').pop().replace('.html', '');
-    list.forEach((item, index) => {
-        const link = item.querySelector('a').href;
-        if(link.includes(currentPage)){
-            currentIndex = index;
-            item.classList.add('active');
-            updateIndicator(item);
-        } else {
-            item.classList.remove('active');
-        }
-    });
+// Auto-detect current page
+const currentPage = window.location.pathname.split('/').pop().replace('.html', '') || 'home';
+list.forEach((item, index) => {
+    const link = item.querySelector('a');
+    const page = link.getAttribute('data-page');
+    if(page === currentPage || (currentPage === '' && index === 0)){
+        item.classList.add('active');
+        currentIndex = index;
+    } else {
+        item.classList.remove('active');
+    }
 });
+
+// Update indicator after a short delay to ensure correct positioning
+setTimeout(() => {
+    const active = document.querySelector('.list.active');
+    if(active) updateIndicator(active);
+}, 100);
 </script>
 </body>
 </html>
