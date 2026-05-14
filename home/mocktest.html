@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="css/mocktest.css">
     <link rel="stylesheet" href="nav.css">
 </head>
-<body class="bg-blue-50 text-blue-900 min-h-screen">
+<body bg-blue-50 text-blue-900 min-h-screen pb-24">
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold text-center mb-8">Mock Tests</h1>
         <div class="bg-white rounded-lg shadow-lg p-6">
@@ -50,28 +50,29 @@
     bottom:0;
     left:0;
     right:0;
-    height:70px;
+    height:75px;
     background:#ffffff;
     display:flex;
     justify-content:center;
     align-items:center;
-    box-shadow:0 -5px 15px rgba(0,0,0,0.1);
+    box-shadow:0 -4px 20px rgba(0,0,0,0.08);
     z-index:1000;
 }
 
 .listWrap{
     list-style:none;
     display:flex;
-    justify-content:space-around;
+    justify-content:space-between;
     align-items:center;
     width:100%;
-    max-width:600px;
+    max-width:500px;
     position:relative;
+    padding:0 10px;
 }
 
 .listWrap li{
-    width:70px;
-    height:70px;
+    width:65px;
+    height:65px;
     position:relative;
     z-index:1;
 }
@@ -82,50 +83,48 @@
     justify-content:center;
     align-items:center;
     flex-direction:column;
-    font-weight:500;
     width:100%;
 }
 
 .listWrap li a .icon{
-    line-height:75px;
-    transition:0.4s;
-    color:#1e3a8a;
+    line-height:70px;
+    transition:0.4s ease;
+    color:#2563eb;
 }
 
 .listWrap li a .icon ion-icon{
-    font-size:26px;
+    font-size:24px;
 }
 
 .listWrap li a .text{
     position:absolute;
-    font-size:11px;
+    font-size:10px;
     font-weight:600;
-    color:#1e3a8a;
-    transform:translateY(20px);
+    color:#2563eb;
+    transform:translateY(18px);
     opacity:0;
-    transition:0.4s;
+    transition:0.3s ease;
 }
 
 .listWrap li.active a .icon{
-    color:white;
-    transform:translateY(-30px);
+    color:#fff;
+    transform:translateY(-26px);
 }
 
 .listWrap li.active a .text{
     opacity:1;
-    transform:translateY(10px);
+    transform:translateY(8px);
 }
 
 .indicator{
     position:absolute;
-    width:70px;
-    height:70px;
-    top:-50%;
+    width:60px;
+    height:60px;
+    top:-30px;
     left:0;
     border-radius:50%;
     background:#2563eb;
-    border:6px solid #dbeafe;
-    transition:0.3s;
+    transition:0.3s ease;
     z-index:0;
 }
 </style>
@@ -177,12 +176,11 @@ const indicator = document.querySelector('.indicator');
 const listWrap = document.querySelector('.listWrap');
 
 function updateIndicator(activeItem){
-    const wrapRect = listWrap.getBoundingClientRect();
     const itemRect = activeItem.getBoundingClientRect();
-    const center = itemRect.left + itemRect.width/2 - wrapRect.left;
-    indicator.style.left = (center - indicator.offsetWidth/2) + 'px';
+    const wrapRect = listWrap.getBoundingClientRect();
+    indicator.style.left =
+        (itemRect.left - wrapRect.left + itemRect.width/2 - 30) + "px";
 }
-
 function activateLink(){
     listItem.forEach(item => item.classList.remove('active'));
     this.classList.add('active');
