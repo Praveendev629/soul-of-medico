@@ -7,7 +7,7 @@
     <link rel="icon" type="image/jpeg" href="../assets/logo.jpeg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/mocktest.css">
-    <link rel="stylesheet" href="nav.css">
+    
 </head>
 <body bg-blue-50 text-blue-900 min-h-screen pb-24">
     <div class="container mx-auto px-4 py-8">
@@ -39,165 +39,159 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
-        <!-- Ionicons -->
+ <!-- Ionicons -->
 <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 
 <style>
+body{
+    padding-bottom:90px;
+}
+
 .navigation{
     position:fixed;
     bottom:0;
     left:0;
-    right:0;
-    height:75px;
-    background:#ffffff;
+    width:100%;
+    height:80px;
+    background:#fff;
     display:flex;
     justify-content:center;
     align-items:center;
-    box-shadow:0 -4px 20px rgba(0,0,0,0.08);
+    box-shadow:0 -5px 20px rgba(0,0,0,0.08);
     z-index:1000;
 }
 
-.listWrap{
-    list-style:none;
+.navigation ul{
     display:flex;
-    justify-content:space-between;
-    align-items:center;
     width:100%;
     max-width:500px;
     position:relative;
-    padding:0 10px;
+    padding:0;
+    margin:0;
 }
 
-.listWrap li{
-    width:65px;
-    height:65px;
+.navigation ul li{
+    list-style:none;
     position:relative;
+    width:20%;
+    height:70px;
     z-index:1;
 }
 
-.listWrap li a{
-    text-decoration:none;
+.navigation ul li a{
+    position:relative;
     display:flex;
     justify-content:center;
     align-items:center;
     flex-direction:column;
     width:100%;
+    text-decoration:none;
 }
 
-.listWrap li a .icon{
-    line-height:70px;
-    transition:0.4s ease;
+.navigation ul li a .icon{
+    position:relative;
+    display:block;
+    line-height:75px;
+    font-size:24px;
+    text-align:center;
+    transition:0.4s;
     color:#2563eb;
 }
 
-.listWrap li a .icon ion-icon{
-    font-size:24px;
-}
-
-.listWrap li a .text{
+.navigation ul li a .text{
     position:absolute;
-    font-size:10px;
+    font-size:11px;
     font-weight:600;
     color:#2563eb;
-    transform:translateY(18px);
+    transform:translateY(20px);
     opacity:0;
-    transition:0.3s ease;
+    transition:0.4s;
 }
 
-.listWrap li.active a .icon{
+.navigation ul li.active a .icon{
     color:#fff;
-    transform:translateY(-26px);
+    transform:translateY(-32px);
 }
 
-.listWrap li.active a .text{
+.navigation ul li.active a .text{
     opacity:1;
-    transform:translateY(8px);
+    transform:translateY(10px);
 }
 
 .indicator{
     position:absolute;
-    width:60px;
-    height:60px;
-    top:-30px;
-    left:0;
-    border-radius:50%;
+    top:-35px;
+    width:70px;
+    height:70px;
     background:#2563eb;
-    transition:0.3s ease;
-    z-index:0;
+    border-radius:50%;
+    transition:0.4s;
 }
 </style>
 
 <div class="navigation">
-<ul class="listWrap">
-    <li class="list">
-        <a href="home.html">
-            <i class="icon"><ion-icon name="home-outline"></ion-icon></i>
-            <span class="text">HOME</span>
-        </a>
-    </li>
+    <ul>
+        <li class="list">
+            <a href="home.html">
+                <span class="icon"><ion-icon name="home-outline"></ion-icon></span>
+                <span class="text">HOME</span>
+            </a>
+        </li>
 
-    <li class="list active">
-        <a href="mocktest.html">
-            <i class="icon"><ion-icon name="create-outline"></ion-icon></i>
-            <span class="text">TEST</span>
-        </a>
-    </li>
+        <li class="list active">
+            <a href="mocktest.html">
+                <span class="icon"><ion-icon name="create-outline"></ion-icon></span>
+                <span class="text">TEST</span>
+            </a>
+        </li>
 
-    <li class="list">
-        <a href="notes.html">
-            <i class="icon"><ion-icon name="document-text-outline"></ion-icon></i>
-            <span class="text">NOTES</span>
-        </a>
-    </li>
+        <li class="list">
+            <a href="notes.html">
+                <span class="icon"><ion-icon name="document-text-outline"></ion-icon></span>
+                <span class="text">NOTES</span>
+            </a>
+        </li>
 
-    <li class="list">
-        <a href="ai.html">
-            <i class="icon"><ion-icon name="chatbubbles-outline"></ion-icon></i>
-            <span class="text">AI</span>
-        </a>
-    </li>
+        <li class="list">
+            <a href="ai.html">
+                <span class="icon"><ion-icon name="chatbubbles-outline"></ion-icon></span>
+                <span class="text">AI</span>
+            </a>
+        </li>
 
-    <li class="list">
-        <a href="contact.html">
-            <i class="icon"><ion-icon name="call-outline"></ion-icon></i>
-            <span class="text">CONTACT</span>
-        </a>
-    </li>
+        <li class="list">
+            <a href="contact.html">
+                <span class="icon"><ion-icon name="call-outline"></ion-icon></span>
+                <span class="text">CONTACT</span>
+            </a>
+        </li>
 
-    <li class="indicator"></li>
-</ul>
+        <div class="indicator"></div>
+    </ul>
 </div>
 
 <script>
-const listItem = document.querySelectorAll('.list');
+const list = document.querySelectorAll('.list');
 const indicator = document.querySelector('.indicator');
-const listWrap = document.querySelector('.listWrap');
 
-function updateIndicator(activeItem){
-    const itemRect = activeItem.getBoundingClientRect();
-    const wrapRect = listWrap.getBoundingClientRect();
-    indicator.style.left =
-        (itemRect.left - wrapRect.left + itemRect.width/2 - 30) + "px";
-}
-function activateLink(){
-    listItem.forEach(item => item.classList.remove('active'));
-    this.classList.add('active');
-    updateIndicator(this);
+function updateIndicator(el){
+    indicator.style.left = el.offsetLeft + (el.offsetWidth/2 - 35) + "px";
 }
 
-listItem.forEach(item => item.addEventListener('click', activateLink));
-
-window.addEventListener('load', ()=>{
-    const active = document.querySelector('.list.active');
-    if(active) updateIndicator(active);
+list.forEach(item=>{
+    item.addEventListener('click',function(){
+        list.forEach(i=>i.classList.remove('active'));
+        this.classList.add('active');
+        updateIndicator(this);
+    });
 });
 
-window.addEventListener('resize', ()=>{
+window.addEventListener('load',()=>{
     const active = document.querySelector('.list.active');
-    if(active) updateIndicator(active);
+    updateIndicator(active);
 });
 </script>
+
 </body>
 </html>
