@@ -7,6 +7,11 @@
     <link rel="icon" type="image/jpeg" href="../assets/logo.jpeg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/mocktest.css">
+    <link rel="prefetch" href="home.html">
+<link rel="prefetch" href="mocktest.html">
+<link rel="prefetch" href="notes.html">
+<link rel="prefetch" href="ai.html">
+<link rel="prefetch" href="contact.html">
     
 </head>
 <body class="bg-blue-50 text-blue-900 min-h-screen pb-24">
@@ -44,6 +49,14 @@
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 
 <style>
+    
+body {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+body.loaded {
+    opacity: 1;
+}
 body{
     padding-bottom:90px;
 }
