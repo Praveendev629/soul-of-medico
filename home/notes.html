@@ -56,6 +56,7 @@ body{
     align-items:center;
     box-shadow:0 -5px 20px rgba(0,0,0,0.08);
     z-index:1000;
+    backdrop-filter: blur(10px);
 }
 
 .navigation ul{
@@ -83,6 +84,7 @@ body{
     flex-direction:column;
     width:100%;
     text-decoration:none;
+    cursor: pointer;
 }
 
 .navigation ul li a .icon{
@@ -91,8 +93,9 @@ body{
     line-height:75px;
     font-size:24px;
     text-align:center;
-    transition:0.4s;
+    transition: color 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     color:#2563eb;
+    will-change: transform, color;
 }
 
 .navigation ul li a .text{
@@ -102,7 +105,9 @@ body{
     color:#2563eb;
     transform:translateY(20px);
     opacity:0;
-    transition:0.4s;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+    pointer-events: none;
 }
 
 .navigation ul li.active a .icon{
@@ -122,76 +127,124 @@ body{
     height:70px;
     background:#2563eb;
     border-radius:50%;
-    transition:0.4s;
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
 }
 </style>
 
 <div class="navigation">
     <ul>
         <li class="list">
-            <a href="home.html">
+            <a href="./home.html" data-page="home">
                 <span class="icon"><ion-icon name="home-outline"></ion-icon></span>
                 <span class="text">HOME</span>
             </a>
         </li>
 
         <li class="list">
-            <a href="mocktest.html">
+            <a href="./mocktest.html" data-page="mocktest">
                 <span class="icon"><ion-icon name="create-outline"></ion-icon></span>
                 <span class="text">TEST</span>
             </a>
         </li>
 
         <li class="list active">
-            <a href="notes.html">
+            <a href="./notes.html" data-page="notes">
                 <span class="icon"><ion-icon name="document-text-outline"></ion-icon></span>
                 <span class="text">NOTES</span>
             </a>
         </li>
 
         <li class="list">
-            <a href="ai.html">
+            <a href="./ai.html" data-page="ai">
                 <span class="icon"><ion-icon name="chatbubbles-outline"></ion-icon></span>
                 <span class="text">AI</span>
             </a>
         </li>
 
         <li class="list">
-            <a href="contact.html">
+            <a href="./contact.html" data-page="contact">
                 <span class="icon"><ion-icon name="call-outline"></ion-icon></span>
                 <span class="text">CONTACT</span>
             </a>
         </li>
 
-        <div class="indicator"></div>
+        <div class="indicator" style="will-change: transform;"></div>
     </ul>
 </div>
 
 <script>
 const list = document.querySelectorAll('.list');
 const indicator = document.querySelector('.indicator');
+let isAnimating = false;
+let currentIndex = 0;
 
 function updateIndicator(el){
-    indicator.style.left = el.offsetLeft + (el.offsetWidth/2 - 35) + "px";
+    const index = Array.from(list).indexOf(el);
+    const translateX = index * 100;
+    indicator.style.transform = `translateX(calc(${translateX}% + ${(el.offsetWidth/2 - 35)}px))`;
 }
 
-list.forEach(item=>{
-    item.addEventListener('click',function(){
-        list.forEach(i=>i.classList.remove('active'));
-        this.classList.add('active');
-        updateIndicator(this);
+function setActive(item){
+    if(isAnimating) return;
+    
+    isAnimating = true;
+    const newIndex = Array.from(list).indexOf(item);
+    
+    if(newIndex === currentIndex){
+        isAnimating = false;
+        return;
+    }
+    
+    list.forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    currentIndex = newIndex;
+    updateIndicator(item);
+    
+    // Re-enable after animation
+    setTimeout(() => {
+        isAnimating = false;
+    }, 350);
+}
+
+list.forEach((item, index) => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        setActive(item);
+        // Navigate after animation completes
+        setTimeout(() => {
+            const link = item.querySelector('a');
+            if(link && link.href){
+                window.location.href = link.href;
+            }
+        }, 175);
     });
 });
 
-window.addEventListener('load',()=>{
+// Initialize on load
+window.addEventListener('load', () => {
     const active = document.querySelector('.list.active');
-    updateIndicator(active);
+    if(active){
+        currentIndex = Array.from(list).indexOf(active);
+        updateIndicator(active);
+    }
+});
+
+// Restore active state based on current page
+window.addEventListener('load', () => {
+    const currentPage = window.location.pathname.split('/').pop().replace('.html', '');
+    list.forEach((item, index) => {
+        const link = item.querySelector('a').href;
+        if(link.includes(currentPage)){
+            currentIndex = index;
+            item.classList.add('active');
+            updateIndicator(item);
+        } else {
+            item.classList.remove('active');
+        }
+    });
 });
 </script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="../firebase-config.js"></script>
-    <script src="js/notes.js"></script>
-   
 </body>
 </html>
