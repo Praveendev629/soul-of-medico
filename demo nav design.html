@@ -1,193 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Nav Design</title>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body>
+
 <div class="navigation">
 	<ul class="listWrap">
 		<li class="list active">
 			<a href="javascript:void(0);">
 				<i class="icon">
+					<ion-icon name="create-outline"></ion-icon>
+				</i>
+				<span class="text">TEST</span>
+			</a>
+		</li>
+		<li class="list">
+			<a href="javascript:void(0);">
+				<i class="icon">
+					<ion-icon name="document-attach-outline"></ion-icon>
+				</i>
+				<span class="text">NOTES</span>
+			</a>
+		</li>
+		<li class="list">
+			<a href="javascript:void(0);">
+				<i class="icon">
 					<ion-icon name="home-outline"></ion-icon>
 				</i>
-				<span class="text">Home</span>
+				<span class="text">HOME</span>
 			</a>
 		</li>
 		<li class="list">
 			<a href="javascript:void(0);">
 				<i class="icon">
-					<ion-icon name="information-circle-outline"></ion-icon>
+					<ion-icon name="chatbubbles-outline"></ion-icon>
 				</i>
-				<span class="text">About</span>
+				<span class="text">AI</span>
 			</a>
 		</li>
 		<li class="list">
 			<a href="javascript:void(0);">
 				<i class="icon">
-					<ion-icon name="person-outline"></ion-icon>
+					<ion-icon name="call-outline"></ion-icon>
 				</i>
-				<span class="text">Profile</span>
-			</a>
-		</li>
-		<li class="list">
-			<a href="javascript:void(0);">
-				<i class="icon">
-					<ion-icon name="settings-outline"></ion-icon>
-				</i>
-				<span class="text">Settings</span>
+				<span class="text">CONTACT</span>
 			</a>
 		</li>
 		<li class="indicator"></li>
 	</ul>
 </div>
 
-<style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500&display=swap');
-
-html {
-  font-size: 62.5%;
-}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500&display=swap');
 
 * {
 	padding: 0;
 	margin: 0;
 	box-sizing: border-box;
 	font-family: 'Poppins', sans-serif;
-	font-size: 1.4rem;
 	-webkit-tap-highlight-color: transparent;
 }
 
 :root {
 	--bg-default: #222327;
 	--primary-white: #ffffff;
-	--primary-red: #081ccd;
+	--primary-red: #ff3c41;
 }
 
 body {
-	display: flex;
-	justify-content: center;
-	align-items: center;
 	min-height: 100vh;
 	background: var(--bg-default);
 }
 
+/* ── Pinned to bottom ── */
 .navigation {
-	width: 360px;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
 	height: 70px;
 	background: var(--primary-white);
+	display: flex;
+	justify-content: center;
+	
+}
+
+.listWrap {
+	list-style: none;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	width: 100%;
+	max-width: 600px;
+	position: relative;
+	padding: 0 8px;
+}
+
+.listWrap li {
+	width: 70px;
+	height: 70px;
+	position: relative;
+	z-index: 1;
+}
+
+.listWrap li a {
+	text-decoration: none;
 	position: relative;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	border-radius: 10px;
-	padding: 0 20px;
-	.listWrap {
-		list-style: none;
-		display: flex;
-		justify-content: space-between;
-		width: 100%;
-		li {
-			width: 70px;
-			height: 70px;
-			position: relative;
-			z-index: 1;
-			a {
-				text-decoration: none;
-				position: relative;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				flex-direction: column;
-				text-align: center;
-				font-weight: 500;
-				width: 100%;
-				&:hover {
-					text-decoration: none;
-				}
-				.icon {
-					position: relative;
-					display: block;
-					line-height: 75px;
-					text-align: center;
-					transition: 0.5s;
-					color: var(--bg-default);
-					ion-icon {
-						font-size: 2.2rem;
-					}
-				}
-				.text {
-					position: absolute;
-					color: var(--bg-default);
-					font-weight: 400;
-					letter-spacing: 0.05em;
-					transition: 0.5s;
-					transform: translateY(20px);
-					opacity: 0;
-					z-index: 1;
-				}
-			}
-			&:active, &.active {
-				a {
-					.icon {
-						color: var(--primary-white);
-						transform: translateY(-32px);
-					}
-					.text {
-						opacity: 1;
-						transform: translateY(10px);
-					}
-				}
-			}
-			&.indicator {
-				position: absolute;
-				width: 70px;
-				height: 70px;
-				top: -50%;
-				border-radius: 50%;
-				border: 6px solid var(--bg-default);
-				background: var(--primary-red);
-				transition: 0.3s;
-				z-index: 0;
-				&:before, &:after {
-					content: '';
-					position: absolute;
-					top: 50%;
-					width: 20px;
-					height: 20px;
-					background: blue;
-					background: transparent;
-				}
-				&:after {
-					right: -22px;
-					box-shadow: -1px -10px 0 0 var(--bg-default);
-					border-top-left-radius: 20px;
-				}
-				&:before {
-					left: -22px;
-					box-shadow: 1px -10px 0 0 var(--bg-default);
-					border-top-right-radius: 20px;
-				}
-			}
-			&:nth-child(1).active ~ .indicator {
-				transform: translateX(calc(70px * 0));
-			}
-			&:nth-child(2).active ~ .indicator {
-				transform: translateX(calc(70px * 1 + (6px * 2)));
-			}
-			&:nth-child(3).active ~ .indicator {
-				transform: translateX(calc(70px * 2 + (6px * 4) + 1px));
-			}
-			&:nth-child(4).active ~ .indicator {
-				transform: translateX(calc(70px * 3 + (6px * 6) + 2px));
-			}
-		}
-	}
-}</style>
-
-<script>const listItem = document.querySelectorAll('.list');
-
-function activateLink() {
-	listItem.forEach( item => {
-		item.classList.remove('active');
-	});
-	this.classList.add('active');
+	flex-direction: column;
+	text-align: center;
+	font-weight: 500;
+	width: 100%;
 }
 
-listItem.forEach( item => {
-	item.addEventListener('click', activateLink);
+.listWrap li a .icon {
+	position: relative;
+	display: block;
+	line-height: 75px;
+	text-align: center;
+	transition: 0.5s;
+	color: var(--bg-default);
+}
+
+.listWrap li a .icon ion-icon {
+	font-size: 26px;
+}
+
+.listWrap li a .text {
+	position: absolute;
+	color: var(--bg-default);
+	font-weight: 600;
+	font-size: 12px;
+	letter-spacing: 0.05em;
+	transition: 0.5s;
+	transform: translateY(20px);
+	opacity: 0;
+	z-index: 1;
+}
+
+.listWrap li:active a .icon,
+.listWrap li.active a .icon {
+	color: var(--primary-white);
+	transform: translateY(-32px);
+}
+
+.listWrap li:active a .text,
+.listWrap li.active a .text {
+	opacity: 1;
+	transform: translateY(10px);
+}
+
+li.indicator {
+	position: absolute;
+	width: 70px;
+	height: 70px;
+	top: -50%;
+	border-radius: 50%;
+	border: 6px solid var(--bg-default);
+	background: var(--primary-red);
+	transition: 0.3s;
+	z-index: 0;
+}
+
+li.indicator:before,
+li.indicator:after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	width: 20px;
+	height: 20px;
+	background: transparent;
+}
+
+li.indicator:after {
+	right: -22px;
+	box-shadow: -1px -10px 0 0 var(--bg-default);
+	border-top-left-radius: 20px;
+}
+
+li.indicator:before {
+	left: -22px;
+	box-shadow: 1px -10px 0 0 var(--bg-default);
+	border-top-right-radius: 20px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+	.listWrap li {
+		width: 56px;
+		height: 70px;
+	}
+	.listWrap li a .icon ion-icon {
+		font-size: 22px;
+	}
+	.listWrap li a .text {
+		font-size: 10px;
+	}
+}
+
+@media (max-width: 360px) {
+	.listWrap li a .icon ion-icon {
+		font-size: 20px;
+	}
+	.listWrap li a .text {
+		font-size: 9px;
+		letter-spacing: 0.02em;
+	}
+}
+</style>
+
+<script>
+const listItem = document.querySelectorAll('.list');
+const indicator = document.querySelector('.indicator');
+const listWrap = document.querySelector('.listWrap');
+
+function updateIndicator(activeItem) {
+	const wrapRect = listWrap.getBoundingClientRect();
+	const itemRect = activeItem.getBoundingClientRect();
+	const center = itemRect.left + itemRect.width / 2 - wrapRect.left;
+	indicator.style.left = (center - indicator.offsetWidth / 2) + 'px';
+}
+
+function activateLink() {
+	listItem.forEach(item => item.classList.remove('active'));
+	this.classList.add('active');
+	updateIndicator(this);
+}
+
+listItem.forEach(item => item.addEventListener('click', activateLink));
+
+window.addEventListener('load', () => {
+	const active = document.querySelector('.list.active');
+	if (active) updateIndicator(active);
+});
+
+window.addEventListener('resize', () => {
+	const active = document.querySelector('.list.active');
+	if (active) updateIndicator(active);
 });
 </script>
+</body>
+</html>
