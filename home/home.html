@@ -12,6 +12,133 @@
             background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
             min-height: 100vh;
         }
+
+        .profile-bar {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1100;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            max-width: calc(100% - 2rem);
+        }
+
+        .profile-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(15,23,42,0.1);
+            color: #0f172a;
+            padding: 0.8rem 1rem;
+            border-radius: 999px;
+            font-weight: 600;
+            box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+            cursor: pointer;
+        }
+
+        .profile-panel {
+            width: 320px;
+            max-width: 100%;
+            background: rgba(255,255,255,0.98);
+            border: 1px solid rgba(15,23,42,0.08);
+            border-radius: 1rem;
+            box-shadow: 0 20px 50px rgba(15,23,42,0.12);
+            padding: 1.25rem;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            transform: translateY(-10px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .profile-panel.open {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .profile-panel h2 {
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .profile-panel p,
+        .profile-panel label {
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .profile-panel .field {
+            margin-bottom: 0.85rem;
+        }
+
+        .profile-panel input {
+            width: 100%;
+            border: 1px solid rgba(15,23,42,0.12);
+            border-radius: 0.75rem;
+            padding: 0.85rem 1rem;
+            font-size: 0.95rem;
+            color: #0f172a;
+            background: #f8fafc;
+            outline: none;
+        }
+
+        .profile-panel .field input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+        }
+
+        .profile-panel .info-text {
+            margin-bottom: 1rem;
+            color: #475569;
+        }
+
+        .profile-panel .actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .profile-panel .actions button {
+            flex: 1 1 48%;
+            border: none;
+            border-radius: 0.85rem;
+            padding: 0.85rem 1rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .profile-panel .actions .save-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .profile-panel .actions .logout-btn {
+            background: #f8fafc;
+            color: #0f172a;
+            border: 1px solid rgba(15,23,42,0.12);
+        }
+
+        .profile-panel .status {
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #16a34a;
+        }
+
+        @media (max-width: 640px) {
+            .profile-bar {
+                right: 0.75rem;
+                left: 0.75rem;
+                top: 0.75rem;
+            }
+
+            .profile-panel {
+                width: 100%;
+            }
+        }
     </style>
     <link rel="stylesheet" href="nav.css">
 </head>
@@ -28,6 +155,30 @@
         });
     </script>
 
+    <div class="profile-bar">
+        <button id="profileBtn" class="profile-button">
+            <span class="material-icons-outlined">account_circle</span>
+            Profile
+        </button>
+        <div id="profilePanel" class="profile-panel" aria-hidden="true">
+            <h2>Profile Management</h2>
+            <div class="field">
+                <label for="displayNameInput">Nickname / User Name</label>
+                <input id="displayNameInput" type="text" placeholder="Enter your display name" />
+            </div>
+            <div class="field">
+                <label for="emailField">Email address</label>
+                <input id="emailField" type="text" readonly />
+            </div>
+            <p class="info-text">Use the form above to update your name. Your email is shown here for reference.</p>
+            <div class="actions">
+                <button id="saveProfileBtn" class="save-btn">Save Profile</button>
+                <button id="logoutBtn" class="logout-btn">Log Out</button>
+            </div>
+            <p id="profileStatus" class="status" aria-live="polite"></p>
+        </div>
+    </div>
+
         <div class="page-nav-stage">
         <div class="page-nav-box">
             <div class="tabbar tab-style1">
@@ -43,5 +194,82 @@
         </div>
     </div>
     <script src="nav.js"></script>
+    <script>
+        const profileBtn = document.getElementById('profileBtn');
+        const profilePanel = document.getElementById('profilePanel');
+        const displayNameInput = document.getElementById('displayNameInput');
+        const emailField = document.getElementById('emailField');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const profileStatus = document.getElementById('profileStatus');
+
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                return;
+            }
+            displayNameInput.value = user.displayName || '';
+            emailField.value = user.email || '';
+        });
+
+        function openProfilePanel() {
+            profilePanel.classList.add('open');
+            profilePanel.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeProfilePanel() {
+            profilePanel.classList.remove('open');
+            profilePanel.setAttribute('aria-hidden', 'true');
+        }
+
+        profileBtn.addEventListener('click', () => {
+            if (profilePanel.classList.contains('open')) {
+                closeProfilePanel();
+                return;
+            }
+            openProfilePanel();
+        });
+
+        window.addEventListener('click', (event) => {
+            if (!profilePanel.contains(event.target) && !profileBtn.contains(event.target)) {
+                closeProfilePanel();
+            }
+        });
+
+        saveProfileBtn.addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (!user) {
+                profileStatus.textContent = 'No authenticated user found.';
+                return;
+            }
+
+            const newName = displayNameInput.value.trim();
+            if (!newName) {
+                profileStatus.textContent = 'Please enter a valid nickname or user name.';
+                profileStatus.style.color = '#b91c1c';
+                return;
+            }
+
+            try {
+                await user.updateProfile({ displayName: newName });
+                profileStatus.textContent = 'Profile updated successfully.';
+                profileStatus.style.color = '#16a34a';
+            } catch (error) {
+                console.error('Profile update failed:', error);
+                profileStatus.textContent = 'Unable to save profile. Try again.';
+                profileStatus.style.color = '#b91c1c';
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                window.location.href = '../signin.html';
+            } catch (error) {
+                console.error('Log out failed:', error);
+                profileStatus.textContent = 'Unable to sign out right now.';
+                profileStatus.style.color = '#b91c1c';
+            }
+        });
+    </script>
 </body>
 </html>
