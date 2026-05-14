@@ -9,15 +9,19 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
             min-height: 100vh;
+            padding-bottom: 90px;
         }
 
-        body:not(.home-page) .profile-bar {
-            display: none !important;
-        }
-
+        /* Profile Bar - Only visible on home page */
         .profile-bar {
             position: fixed;
             top: 1rem;
@@ -27,6 +31,10 @@
             align-items: flex-start;
             gap: 0.5rem;
             max-width: calc(100% - 2rem);
+        }
+
+        .profile-bar.hidden {
+            display: none !important;
         }
 
         .profile-button {
@@ -42,6 +50,7 @@
             cursor: pointer;
             box-shadow: 0 12px 30px rgba(15,23,42,0.08);
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .profile-button:hover {
@@ -51,7 +60,7 @@
 
         .profile-panel {
             width: 320px;
-            max-width: 100%;
+            max-width: 90vw;
             background: rgba(255,255,255,0.98);
             border: 1px solid rgba(15,23,42,0.08);
             border-radius: 1rem;
@@ -65,6 +74,7 @@
             right: 0;
             top: 100%;
             margin-top: 0.5rem;
+            z-index: 1101;
         }
 
         .profile-panel.open {
@@ -108,6 +118,7 @@
         .profile-panel .info-text {
             margin-bottom: 1rem;
             color: #475569;
+            font-size: 0.9rem;
         }
 
         .profile-panel .actions {
@@ -123,11 +134,17 @@
             padding: 0.85rem 1rem;
             font-weight: 700;
             cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
         }
 
         .profile-panel .actions .save-btn {
             background: #2563eb;
             color: white;
+        }
+
+        .profile-panel .actions .save-btn:hover {
+            background: #1d4ed8;
         }
 
         .profile-panel .actions .logout-btn {
@@ -136,16 +153,118 @@
             border: 1px solid rgba(15,23,42,0.12);
         }
 
+        .profile-panel .actions .logout-btn:hover {
+            background: #f1f5f9;
+        }
+
         .profile-panel .status {
             margin-top: 0.75rem;
             font-size: 0.9rem;
             color: #16a34a;
         }
 
+        /* Navigation Bar - Responsive */
+        .navigation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.08);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .navigation ul {
+            display: flex;
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            padding: 0 1rem;
+            margin: 0;
+            justify-content: space-around;
+        }
+
+        .navigation ul li {
+            list-style: none;
+            position: relative;
+            flex: 1;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+            min-width: 50px;
+        }
+
+        .navigation ul li a {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            text-decoration: none;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .navigation ul li a .icon {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: #2563eb;
+            transition: color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: transform, color;
+        }
+
+        .navigation ul li a .text {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 600;
+            color: #2563eb;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: opacity, transform;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .navigation ul li.active a .icon {
+            color: #fff;
+            transform: translateY(-32px);
+        }
+
+        .navigation ul li.active a .text {
+            opacity: 1;
+            transform: translateY(10px);
+        }
+
+        .indicator {
+            position: absolute;
+            top: -35px;
+            width: 70px;
+            height: 70px;
+            background: #2563eb;
+            border-radius: 50%;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: transform;
+        }
+
         /* Content transition */
         #app-content {
             opacity: 1;
             transition: opacity 0.3s ease;
+            min-height: calc(100vh - 90px);
         }
 
         #app-content.fade-out {
@@ -156,22 +275,80 @@
             opacity: 1;
         }
 
+        /* Responsive Design */
         @media (max-width: 640px) {
-            .profile-bar {
-                right: 0.75rem;
-                left: 0.75rem;
-                top: 0.75rem;
+            body {
+                padding-bottom: 100px;
             }
 
-            .profile-panel {
-                width: 100%;
-                right: -0.75rem;
+            .profile-bar {
+                top: 0.5rem;
+                right: 0.5rem;
+            }
+
+            .navigation {
+                height: 90px;
+            }
+
+            .navigation ul li {
+                height: 80px;
+            }
+
+            .navigation ul li a .icon {
+                font-size: 22px;
+            }
+
+            .navigation ul li a .text {
+                font-size: 10px;
+            }
+
+            .indicator {
+                width: 60px;
+                height: 60px;
+                top: -30px;
+            }
+        }
+
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .navigation ul {
+                max-width: 700px;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .navigation ul {
+                max-width: 800px;
+                gap: 1rem;
+            }
+
+            .navigation ul li a .icon {
+                font-size: 28px;
+            }
+
+            .navigation ul li.active a .icon {
+                transform: translateY(-36px);
+            }
+
+            .indicator {
+                width: 80px;
+                height: 80px;
+                top: -40px;
+            }
+
+            .indicator::before,
+            .indicator::after {
+                content: "";
+                position: absolute;
+                width: 25px;
+                height: 25px;
+                background: transparent;
+                border-radius: 50%;
             }
         }
     </style>
    
 </head>
-<body class="bg-blue-50 text-blue-900 min-h-screen pb-24 home-page">
+<body class="bg-blue-50 text-blue-900 min-h-screen">
     <!-- Firebase Auth Check -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
@@ -188,8 +365,8 @@
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 
-    <!-- Profile Bar -->
-    <div class="profile-bar">
+    <!-- Profile Bar - Only on home page -->
+    <div class="profile-bar" id="profileBar">
         <button class="profile-button" id="profileBtn">
             <span>👤</span>
             <span id="profileName">Profile</span>
@@ -216,102 +393,6 @@
     </div>
 
     <!-- Navigation Bar -->
-    <style>
-        body{
-            padding-bottom:90px;
-            opacity: 1;
-        }
-
-        .navigation{
-            position:fixed;
-            bottom:0;
-            left:0;
-            width:100%;
-            height:80px;
-            background:#fff;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            box-shadow:0 -5px 20px rgba(0,0,0,0.08);
-            z-index:1000;
-            backdrop-filter: blur(10px);
-        }
-
-        .navigation ul{
-            display:flex;
-            width:100%;
-            max-width:500px;
-            position:relative;
-            padding:0;
-            margin:0;
-        }
-
-        .navigation ul li{
-            list-style:none;
-            position:relative;
-            width:20%;
-            height:70px;
-            z-index:1;
-        }
-
-        .navigation ul li a{
-            position:relative;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            flex-direction:column;
-            width:100%;
-            text-decoration:none;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .navigation ul li a .icon{
-            position:relative;
-            display:block;
-            line-height:75px;
-            font-size:24px;
-            text-align:center;
-            transition: color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            color:#2563eb;
-            will-change: transform, color;
-        }
-
-        .navigation ul li a .text{
-            position:absolute;
-            font-size:11px;
-            font-weight:600;
-            color:#2563eb;
-            transform:translateY(20px);
-            opacity:0;
-            transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            will-change: opacity, transform;
-            pointer-events: none;
-        }
-
-        .navigation ul li.active a .icon{
-            color:#fff;
-            transform:translateY(-32px);
-        }
-
-        .navigation ul li.active a .text{
-            opacity:1;
-            transform:translateY(10px);
-        }
-
-        .indicator{
-            position:absolute;
-            top:-35px;
-            width:70px;
-            height:70px;
-            background:#2563eb;
-            border-radius:50%;
-            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            will-change: transform;
-        }
-    </style>
-
     <div class="navigation">
         <ul>
             <li class="list active">
@@ -358,6 +439,7 @@
         const list = document.querySelectorAll('.list');
         const indicator = document.querySelector('.indicator');
         const appContent = document.getElementById('app-content');
+        const profileBar = document.getElementById('profileBar');
         let isAnimating = false;
         let currentPage = 'home';
 
@@ -378,30 +460,15 @@
                 
                 let html = await response.text();
                 
-                // Extract only the body content (remove nav and scripts)
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+                // Extract content between body tags, excluding navigation
+                const bodyStart = html.indexOf('<body');
+                const bodyEnd = html.indexOf('</body>');
+                let content = html.substring(bodyStart, bodyEnd);
                 
-                // Get main content (everything except nav)
-                let content = '';
-                const body = doc.body;
-                
-                // Get all elements except navigation
-                body.querySelectorAll('*').forEach(el => {
-                    if (!el.classList.contains('navigation') && 
-                        !el.closest('.navigation') &&
-                        el.tagName !== 'SCRIPT') {
-                        if (!el.parentElement?.classList.contains('navigation')) {
-                            content = body.innerHTML;
-                        }
-                    }
-                });
-                
-                // Fallback: take everything before navigation
-                const navIndex = html.indexOf('<div class="navigation">');
-                if (navIndex > 0) {
-                    content = html.substring(0, navIndex);
-                }
+                // Remove nav section
+                content = content.replace(/<div class="navigation">[\s\S]*?<\/div>/g, '');
+                content = content.replace(/<style>[\s\S]*?\.indicator\{[\s\S]*?<\/style>/g, '');
+                content = content.replace(/<script>[\s\S]*?<\/script>/g, '');
                 
                 return content;
             } catch (error) {
@@ -410,12 +477,28 @@
             }
         }
 
+        // Control profile bar visibility
+        function toggleProfileBar(show) {
+            if (show) {
+                profileBar.classList.remove('hidden');
+            } else {
+                profileBar.classList.add('hidden');
+            }
+        }
+
         // Set indicator position instantly
         function setIndicatorPositionInstant(el) {
             const index = Array.from(list).indexOf(el);
-            const translateX = index * 100;
+            const navUl = el.closest('ul');
+            const liElements = navUl.querySelectorAll('li');
+            
+            // Calculate spacing based on available width
+            const navWidth = navUl.offsetWidth;
+            const spacing = navWidth / liElements.length;
+            const offset = (spacing / 2) - 35;
+            
             indicator.style.transition = 'none';
-            indicator.style.transform = `translateX(calc(${translateX}% + ${(el.offsetWidth/2 - 35)}px))`;
+            indicator.style.transform = `translateX(calc(${index * 100}% + ${offset}px))`;
             void indicator.offsetHeight;
             setTimeout(() => {
                 indicator.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -425,8 +508,14 @@
         // Set indicator position with animation
         function setIndicatorPositionAnimated(el) {
             const index = Array.from(list).indexOf(el);
-            const translateX = index * 100;
-            indicator.style.transform = `translateX(calc(${translateX}% + ${(el.offsetWidth/2 - 35)}px))`;
+            const navUl = el.closest('ul');
+            const liElements = navUl.querySelectorAll('li');
+            
+            const navWidth = navUl.offsetWidth;
+            const spacing = navWidth / liElements.length;
+            const offset = (spacing / 2) - 35;
+            
+            indicator.style.transform = `translateX(calc(${index * 100}% + ${offset}px))`;
         }
 
         // Navigate to page
@@ -446,6 +535,9 @@
                 }
             });
 
+            // Show/hide profile bar
+            toggleProfileBar(page === 'home');
+
             // Fade out current content
             appContent.classList.add('fade-out');
 
@@ -458,7 +550,7 @@
                 // Update URL
                 window.history.pushState({ page }, page, `#${page}`);
 
-                // Re-init ionicons for new content
+                // Re-init ionicons
                 if (window.ionicons) {
                     window.ionicons.loadIcons();
                 }
@@ -470,6 +562,14 @@
                 setTimeout(() => {
                     appContent.classList.remove('fade-in');
                 }, 300);
+
+                // Recalculate indicator position on window resize
+                setTimeout(() => {
+                    const activeItem = document.querySelector('.list.active');
+                    if (activeItem) {
+                        setIndicatorPositionInstant(activeItem);
+                    }
+                }, 100);
 
                 isAnimating = false;
             }, 150);
@@ -491,6 +591,14 @@
             }
         });
 
+        // Handle window resize for responsive indicator
+        window.addEventListener('resize', () => {
+            const activeItem = document.querySelector('.list.active');
+            if (activeItem && !isAnimating) {
+                setIndicatorPositionInstant(activeItem);
+            }
+        });
+
         // Load initial page on mount
         window.addEventListener('DOMContentLoaded', async () => {
             const hash = window.location.hash.substring(1) || 'home';
@@ -498,6 +606,9 @@
                 currentPage = hash;
                 const content = await loadPageContent(hash);
                 appContent.innerHTML = content;
+                
+                // Show/hide profile bar
+                toggleProfileBar(hash === 'home');
                 
                 // Set active nav
                 list.forEach(item => {
@@ -545,7 +656,8 @@
             profilePanel.setAttribute('aria-hidden', 'true');
         }
 
-        profileBtn.addEventListener('click', () => {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (profilePanel.classList.contains('open')) {
                 closeProfilePanel();
                 return;
