@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soul of Medico - Loading</title>
+    <link rel="icon" type="image/jpeg" href="assets/logo.jpeg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e1b4b 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .splash-container {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Animated Background Elements */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .blob {
+            position: absolute;
+            opacity: 0.2;
+            mix-blend-mode: multiply;
+            filter: blur(50px);
+        }
+
+        .blob-1 {
+            width: 300px;
+            height: 300px;
+            background: #8b5cf6;
+            top: -50px;
+            left: -50px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .blob-2 {
+            width: 300px;
+            height: 300px;
+            background: #fbbf24;
+            bottom: -100px;
+            right: -50px;
+            animation: float 7s ease-in-out infinite reverse;
+        }
+
+        .blob-3 {
+            width: 200px;
+            height: 200px;
+            background: #ec4899;
+            top: 50%;
+            right: 10%;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0px, 0px); }
+            33% { transform: translate(30px, -50px); }
+            66% { transform: translate(-20px, 20px); }
+        }
+
+        /* Logo Animation */
+        .logo-wrapper {
+            margin-bottom: 40px;
+            animation: scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .logo-circle {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid rgba(134, 239, 172, 0.4);
+            box-shadow: 0 0 40px rgba(134, 239, 172, 0.3);
+            overflow: hidden;
+        }
+
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Text Animation */
+        .title {
+            margin-top: 30px;
+            animation: slideUp 0.8s ease 0.2s both;
+        }
+
+        .title h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .title .highlight {
+            background: linear-gradient(135deg, #86efac 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 15px;
+            animation: slideUp 0.8s ease 0.4s both;
+            font-weight: 300;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading Spinner */
+        .loader {
+            margin-top: 50px;
+            animation: slideUp 0.8s ease 0.6s both;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #86efac;
+            border-right-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Loading Text */
+        .loading-text {
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #86efac;
+            margin: 0 4px;
+            animation: blink 1.4s infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            margin-top: 40px;
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #86efac 0%, #60a5fa 100%);
+            border-radius: 10px;
+            animation: progress 2s ease-out forwards;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Fade Out Animation */
+        body.fade-out {
+            animation: fadeOut 0.5s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .title h1 {
+                font-size: 2rem;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .progress-bar-container {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Splash Content -->
+    <div class="splash-container">
+        <!-- Logo -->
+        <div class="logo-wrapper">
+            <div class="logo-circle">
+                <img src="assets/logo.jpeg" alt="Soul of Medico">
+            </div>
+        </div>
+
+        <!-- Title -->
+        <div class="title">
+            <h1>SOUL OF</h1>
+            <h1><span class="highlight">MEDICO</span></h1>
+        </div>
+
+        <!-- Tagline -->
+        <p class="tagline">Your Path to Medical Excellence</p>
+
+        <!-- Loader -->
+        <div class="loader">
+            <div class="spinner"></div>
+            <div class="loading-text">
+                Loading
+                <span class="loading-dots">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <script>
+        // Check authentication and redirect
+        let hasRedirected = false;
+
+        auth.onAuthStateChanged((user) => {
+            if (!hasRedirected) {
+                hasRedirected = true;
+                
+                // Show fade out animation
+                setTimeout(() => {
+                    document.body.classList.add('fade-out');
+                    
+                    // Redirect after animation
+                    setTimeout(() => {
+                        if (user) {
+                            // User is signed in, go to home
+                            window.location.href = 'home/home.html';
+                        } else {
+                            // User not signed in, go to signin
+                            window.location.href = 'signin.html';
+                        }
+                    }, 500);
+                }, 2000); // Show intro for 2 seconds
+            }
+        });
+
+        // Fallback redirect after 3.5 seconds
+        setTimeout(() => {
+            if (!hasRedirected) {
+                hasRedirected = true;
+                document.body.classList.add('fade-out');
+                setTimeout(() => {
+                    window.location.href = 'signin.html';
+                }, 500);
+            }
+        }, 3500);
+    </script>
+</body>
+</html>

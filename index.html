@@ -24,12 +24,8 @@
     
     <!-- Custom Styles -->
     <style>
-        html, body { 
-            display: none;
-        }
-        body.page-ready { 
-            display: block !important;
-        }
+        body { visibility: hidden; }
+        body.page-ready { visibility: visible; }
 
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
@@ -298,35 +294,28 @@
     <script src="firebase-config.js"></script>
     <script>
         let redirectStarted = false;
-        let authChecked = false;
 
         function showPage() {
-            if (!redirectStarted && authChecked) {
+            if (!redirectStarted) {
                 document.body.classList.add('page-ready');
             }
         }
 
-        // Check auth state IMMEDIATELY
         auth.onAuthStateChanged((user) => {
-            authChecked = true;
-            
             if (user) {
-                // User is logged in - redirect immediately
                 redirectStarted = true;
-                window.location.href = 'home/home.html';
+                window.location.href = 'intro.html';
                 return;
             }
 
-            // User is NOT logged in - show the page
-            showPage();
-        });
-
-        // Fallback timeout (in case auth takes too long)
-        setTimeout(() => {
-            if (authChecked) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', showPage);
+            } else {
                 showPage();
             }
-        }, 2000);
+        });
+
+        setTimeout(showPage, 1500);
     </script>
 </head>
 <body class="gradient-bg min-h-screen flex items-center justify-center overflow-hidden">
