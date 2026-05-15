@@ -163,7 +163,6 @@
 <style>
 body{
     padding-bottom:90px;
-    opacity: 1;
 }
 
 .navigation{
@@ -178,7 +177,6 @@ body{
     align-items:center;
     box-shadow:0 -5px 20px rgba(0,0,0,0.08);
     z-index:1000;
-    backdrop-filter: blur(10px);
 }
 
 .navigation ul{
@@ -206,8 +204,6 @@ body{
     flex-direction:column;
     width:100%;
     text-decoration:none;
-    cursor: pointer;
-    user-select: none;
 }
 
 .navigation ul li a .icon{
@@ -216,9 +212,8 @@ body{
     line-height:75px;
     font-size:24px;
     text-align:center;
-    transition: color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition:0.4s;
     color:#2563eb;
-    will-change: transform, color;
 }
 
 .navigation ul li a .text{
@@ -228,9 +223,7 @@ body{
     color:#2563eb;
     transform:translateY(20px);
     opacity:0;
-    transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    will-change: opacity, transform;
-    pointer-events: none;
+    transition:0.4s;
 }
 
 .navigation ul li.active a .icon{
@@ -250,173 +243,148 @@ body{
     height:70px;
     background:#2563eb;
     border-radius:50%;
-    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
-    will-change: transform;
+    transition:0.4s;
 }
 </style>
 
 <div class="navigation">
     <ul>
         <li class="list active">
-            <a href="./home.html" data-page="home">
+            <a href="home.html">
                 <span class="icon"><ion-icon name="home-outline"></ion-icon></span>
                 <span class="text">HOME</span>
             </a>
         </li>
 
         <li class="list">
-            <a href="./mocktest.html" data-page="mocktest">
+            <a href="mocktest.html">
                 <span class="icon"><ion-icon name="create-outline"></ion-icon></span>
                 <span class="text">TEST</span>
             </a>
         </li>
 
         <li class="list">
-            <a href="./notes.html" data-page="notes">
+            <a href="notes.html">
                 <span class="icon"><ion-icon name="document-text-outline"></ion-icon></span>
                 <span class="text">NOTES</span>
             </a>
         </li>
 
         <li class="list">
-            <a href="./ai.html" data-page="ai">
+            <a href="ai.html">
                 <span class="icon"><ion-icon name="chatbubbles-outline"></ion-icon></span>
                 <span class="text">AI</span>
             </a>
         </li>
 
         <li class="list">
-            <a href="./contact.html" data-page="contact">
+            <a href="contact.html">
                 <span class="icon"><ion-icon name="call-outline"></ion-icon></span>
                 <span class="text">CONTACT</span>
             </a>
         </li>
 
-        <div class="indicator" style="will-change: transform;"></div>
+        <div class="indicator"></div>
     </ul>
 </div>
 
 <script>
 const list = document.querySelectorAll('.list');
 const indicator = document.querySelector('.indicator');
-let isAnimating = false;
-let currentIndex = 0;
 
-// Get current page from URL
-function getCurrentPageIndex() {
-    const currentPage = window.location.pathname.split('/').pop().replace('.html', '') || 'home';
-    const pageMap = { 'home': 0, 'mocktest': 1, 'notes': 2, 'ai': 3, 'contact': 4 };
-    return pageMap[currentPage] || 0;
+function updateIndicator(el){
+    indicator.style.left = el.offsetLeft + (el.offsetWidth/2 - 35) + "px";
 }
 
-// Create smooth transition overlay
-function createTransitionOverlay() {
-    const overlay = document.createElement('div');
-    overlay.id = 'page-transition';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
-        opacity: 0;
-        pointer-events: none;
-        z-index: 999;
-        transition: opacity 0.25s ease-in-out;
-    `;
-    document.body.appendChild(overlay);
-    return overlay;
-}
-
-const transitionOverlay = createTransitionOverlay();
-
-// Set indicator position instantly (for initial load)
-function setIndicatorPositionInstant(el){
-    const index = Array.from(list).indexOf(el);
-    const translateX = index * 100;
-    indicator.style.transition = 'none';
-    indicator.style.transform = `translateX(calc(${translateX}% + ${(el.offsetWidth/2 - 35)}px))`;
-    // Force reflow to apply instant change
-    void indicator.offsetHeight;
-    // Re-enable transition for user interactions
-    setTimeout(() => {
-        indicator.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-    }, 50);
-}
-
-// Set indicator position with animation (for user clicks)
-function setIndicatorPositionAnimated(el){
-    const index = Array.from(list).indexOf(el);
-    const translateX = index * 100;
-    indicator.style.transform = `translateX(calc(${translateX}% + ${(el.offsetWidth/2 - 35)}px))`;
-}
-
-function setActive(item){
-    if(isAnimating) return;
-    
-    isAnimating = true;
-    const newIndex = Array.from(list).indexOf(item);
-    
-    if(newIndex === currentIndex){
-        isAnimating = false;
-        return;
-    }
-    
-    list.forEach(i => i.classList.remove('active'));
-    item.classList.add('active');
-    currentIndex = newIndex;
-    setIndicatorPositionAnimated(item);
-    
-    setTimeout(() => {
-        isAnimating = false;
-    }, 300);
-}
-
-list.forEach((item, index) => {
-    item.addEventListener('click', (e) => {
-        e.preventDefault();
-        setActive(item);
-        
-        const link = item.querySelector('a');
-        if(link && link.href){
-            setTimeout(() => {
-                transitionOverlay.style.opacity = '1';
-                setTimeout(() => {
-                    window.location.href = link.href;
-                }, 150);
-            }, 150);
-        }
+list.forEach(item=>{
+    item.addEventListener('click',function(){
+        list.forEach(i=>i.classList.remove('active'));
+        this.classList.add('active');
+        updateIndicator(this);
     });
 });
 
-// Initialize on page load
-window.addEventListener('DOMContentLoaded', () => {
-    currentIndex = getCurrentPageIndex();
-    const active = list[currentIndex];
-    
-    if(active) {
-        active.classList.add('active');
-        setIndicatorPositionInstant(active);
-    }
-    
-    list.forEach((item, index) => {
-        if(index !== currentIndex) {
-            item.classList.remove('active');
-        }
-    });
-});
-
-// Smooth page entrance
-window.addEventListener('load', () => {
-    document.body.style.opacity = '0';
-    document.body.style.transition = 'opacity 0.4s ease-in-out';
-    
-    setTimeout(() => {
-        document.body.style.opacity = '1';
-        transitionOverlay.style.opacity = '0';
-    }, 50);
+window.addEventListener('load',()=>{
+    const active = document.querySelector('.list.active');
+    updateIndicator(active);
 });
 </script>
+    <script>
+        const profileBtn = document.getElementById('profileBtn');
+        const profilePanel = document.getElementById('profilePanel');
+        const displayNameInput = document.getElementById('displayNameInput');
+        const emailField = document.getElementById('emailField');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const profileStatus = document.getElementById('profileStatus');
+
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                return;
+            }
+            displayNameInput.value = user.displayName || '';
+            emailField.value = user.email || '';
+        });
+
+        function openProfilePanel() {
+            profilePanel.classList.add('open');
+            profilePanel.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeProfilePanel() {
+            profilePanel.classList.remove('open');
+            profilePanel.setAttribute('aria-hidden', 'true');
+        }
+
+        profileBtn.addEventListener('click', () => {
+            if (profilePanel.classList.contains('open')) {
+                closeProfilePanel();
+                return;
+            }
+            openProfilePanel();
+        });
+
+        window.addEventListener('click', (event) => {
+            if (!profilePanel.contains(event.target) && !profileBtn.contains(event.target)) {
+                closeProfilePanel();
+            }
+        });
+
+        saveProfileBtn.addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (!user) {
+                profileStatus.textContent = 'No authenticated user found.';
+                return;
+            }
+
+            const newName = displayNameInput.value.trim();
+            if (!newName) {
+                profileStatus.textContent = 'Please enter a valid nickname or user name.';
+                profileStatus.style.color = '#b91c1c';
+                return;
+            }
+
+            try {
+                await user.updateProfile({ displayName: newName });
+                profileStatus.textContent = 'Profile updated successfully.';
+                profileStatus.style.color = '#16a34a';
+            } catch (error) {
+                console.error('Profile update failed:', error);
+                profileStatus.textContent = 'Unable to save profile. Try again.';
+                profileStatus.style.color = '#b91c1c';
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                window.location.href = '../signin.html';
+            } catch (error) {
+                console.error('Log out failed:', error);
+                profileStatus.textContent = 'Unable to sign out right now.';
+                profileStatus.style.color = '#b91c1c';
+            }
+        });
+    </script>
 </body>
 </html>
