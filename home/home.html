@@ -8,12 +8,47 @@
     <link rel="icon" type="image/jpeg" href="../assets/logo.jpeg">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
             min-height: 100vh;
+            padding-bottom: 100px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
+        /* Section Animations */
+        .section {
+            position: relative;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Profile Bar */
         .profile-bar {
             position: fixed;
             top: 1rem;
@@ -37,6 +72,12 @@
             font-weight: 600;
             box-shadow: 0 12px 30px rgba(15,23,42,0.08);
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-button:hover {
+            background: rgba(255,255,255,1);
+            box-shadow: 0 16px 40px rgba(15,23,42,0.12);
         }
 
         .profile-panel {
@@ -51,6 +92,10 @@
             transform: translateY(-10px);
             opacity: 0;
             pointer-events: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
         }
 
         .profile-panel.open {
@@ -110,11 +155,16 @@
             padding: 0.85rem 1rem;
             font-weight: 700;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         .profile-panel .actions .save-btn {
             background: #2563eb;
             color: white;
+        }
+
+        .profile-panel .actions .save-btn:hover {
+            background: #1d4ed8;
         }
 
         .profile-panel .actions .logout-btn {
@@ -123,10 +173,133 @@
             border: 1px solid rgba(15,23,42,0.12);
         }
 
+        .profile-panel .actions .logout-btn:hover {
+            background: #f1f5f9;
+        }
+
         .profile-panel .status {
             margin-top: 0.75rem;
             font-size: 0.9rem;
             color: #16a34a;
+        }
+
+        /* Navigation Styles */
+        .navigation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.08);
+            z-index: 1000;
+        }
+
+        .navigation ul {
+            display: flex;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .navigation ul li {
+            position: relative;
+            width: 20%;
+            height: 70px;
+            z-index: 1;
+        }
+
+        .navigation ul li a {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .navigation ul li a .icon {
+            position: relative;
+            display: block;
+            line-height: 75px;
+            font-size: 24px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            color: #2563eb;
+        }
+
+        .navigation ul li a .text {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 600;
+            color: #2563eb;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .navigation ul li.active a .icon {
+            color: #fff;
+            transform: translateY(-32px);
+        }
+
+        .navigation ul li.active a .text {
+            opacity: 1;
+            transform: translateY(10px);
+        }
+
+        .indicator {
+            position: absolute;
+            top: -35px;
+            width: 70px;
+            height: 70px;
+            background: #2563eb;
+            border-radius: 50%;
+            transition: left 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 0;
+        }
+
+        /* Content Container */
+        .content-wrapper {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        /* Section Specific Styles */
+        .home-section {
+            padding: 2rem;
+        }
+
+        .test-section,
+        .notes-section,
+        .ai-section,
+        .contact-section {
+            padding: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
         }
 
         @media (max-width: 640px) {
@@ -138,215 +311,379 @@
 
             .profile-panel {
                 width: 100%;
+                right: auto;
+                left: 0;
+            }
+
+            body {
+                padding-bottom: 90px;
+            }
+
+            .navigation {
+                height: 70px;
+            }
+
+            .navigation ul li {
+                height: 60px;
+            }
+
+            .navigation ul li a .icon {
+                line-height: 65px;
+                font-size: 22px;
+            }
+
+            .indicator {
+                top: -30px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .home-section,
+            .test-section,
+            .notes-section,
+            .ai-section,
+            .contact-section {
+                padding: 1.5rem 1rem;
             }
         }
     </style>
-   
-</head>
-<body class="bg-blue-50 text-blue-900 min-h-screen pb-24">
-    <!-- Firebase Auth Check -->
+
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="../firebase-config.js"></script>
+</head>
+<body>
+    <!-- Profile Bar -->
+    <div class="profile-bar">
+        <button id="profileBtn" class="profile-button">
+            <ion-icon name="person-circle-outline" style="font-size: 24px;"></ion-icon>
+            <span>Profile</span>
+        </button>
+        <div id="profilePanel" class="profile-panel" aria-hidden="true">
+            <h2>Edit Profile</h2>
+            <div class="field">
+                <label>Display Name</label>
+                <input type="text" id="displayNameInput" placeholder="Enter your name">
+            </div>
+            <div class="field">
+                <label>Email</label>
+                <input type="email" id="emailField" placeholder="Your email" readonly>
+            </div>
+            <div id="profileStatus" class="status"></div>
+            <div class="actions">
+                <button id="saveProfileBtn" class="save-btn">Save</button>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Sections -->
+    <div class="content-wrapper">
+        <!-- HOME SECTION -->
+        <section id="home-section" class="section active home-section">
+            <div class="container mx-auto">
+                <h1 class="text-4xl font-bold mb-8 text-blue-900">Welcome to Soul of Medico</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="card">
+                        <div class="flex items-center mb-4">
+                            <ion-icon name="book-outline" style="font-size: 32px; color: #2563eb; margin-right: 12px;"></ion-icon>
+                            <h3 class="text-xl font-bold text-blue-900">Study Materials</h3>
+                        </div>
+                        <p class="text-gray-600">Access comprehensive study notes for all NEET subjects.</p>
+                        <button onclick="showSection('notes-section')" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">Explore Notes</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="flex items-center mb-4">
+                            <ion-icon name="create-outline" style="font-size: 32px; color: #2563eb; margin-right: 12px;"></ion-icon>
+                            <h3 class="text-xl font-bold text-blue-900">Mock Tests</h3>
+                        </div>
+                        <p class="text-gray-600">Practice with realistic NEET mock tests and improve your score.</p>
+                        <button onclick="showSection('test-section')" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">Take Test</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="flex items-center mb-4">
+                            <ion-icon name="chatbubbles-outline" style="font-size: 32px; color: #2563eb; margin-right: 12px;"></ion-icon>
+                            <h3 class="text-xl font-bold text-blue-900">AI Assistant</h3>
+                        </div>
+                        <p class="text-gray-600">Get instant help from our AI-powered learning assistant.</p>
+                        <button onclick="showSection('ai-section')" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">Chat Now</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="flex items-center mb-4">
+                            <ion-icon name="call-outline" style="font-size: 32px; color: #2563eb; margin-right: 12px;"></ion-icon>
+                            <h3 class="text-xl font-bold text-blue-900">Contact Us</h3>
+                        </div>
+                        <p class="text-gray-600">Have questions? Get in touch with our support team.</p>
+                        <button onclick="showSection('contact-section')" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">Contact</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-2xl font-bold text-blue-900 mb-4">Your Progress</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <p class="text-3xl font-bold text-blue-600">12</p>
+                            <p class="text-gray-600">Tests Completed</p>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <p class="text-3xl font-bold text-green-600">85%</p>
+                            <p class="text-gray-600">Average Score</p>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <p class="text-3xl font-bold text-purple-600">47</p>
+                            <p class="text-gray-600">Hours Studied</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TEST SECTION -->
+        <section id="test-section" class="section test-section">
+            <div class="container mx-auto">
+                <h1 class="text-4xl font-bold mb-8 text-blue-900">Mock Tests</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Full Length Test</h3>
+                        <p class="text-gray-600 mb-4">180 questions, 3 hours. Complete NEET simulation.</p>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">Start Test</button>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Subject Wise Test</h3>
+                        <p class="text-gray-600 mb-4">Focus on specific subjects like Physics, Chemistry, Biology.</p>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">Start Test</button>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Chapter Wise Test</h3>
+                        <p class="text-gray-600 mb-4">Practice individual chapters to master concepts.</p>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">Start Test</button>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Previous Year Papers</h3>
+                        <p class="text-gray-600 mb-4">Solve past NEET papers and understand the pattern.</p>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">Start Test</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NOTES SECTION -->
+        <section id="notes-section" class="section notes-section">
+            <div class="container mx-auto">
+                <h1 class="text-4xl font-bold mb-8 text-blue-900">Study Notes</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Physics</h3>
+                        <p class="text-gray-600 mb-4">Comprehensive notes covering all NEET Physics topics.</p>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">View Notes</button>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Chemistry</h3>
+                        <p class="text-gray-600 mb-4">Detailed Chemistry notes with formulas and reactions.</p>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">View Notes</button>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Biology</h3>
+                        <p class="text-gray-600 mb-4">Complete Biology notes with diagrams and explanations.</p>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">View Notes</button>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Quick Revision</h3>
+                        <p class="text-gray-600 mb-4">Last-minute revision notes for all subjects.</p>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">View Notes</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI SECTION -->
+        <section id="ai-section" class="section ai-section">
+            <div class="container mx-auto">
+                <h1 class="text-4xl font-bold mb-8 text-blue-900">AI Learning Assistant</h1>
+                <div class="card">
+                    <h2 class="text-2xl font-bold text-blue-900 mb-4">Ask Your Questions</h2>
+                    <div class="bg-blue-50 rounded-lg p-6 mb-4">
+                        <div id="chat-container" style="height: 400px; overflow-y: auto; margin-bottom: 16px; padding: 16px; background: white; border-radius: 8px;">
+                            <p class="text-gray-500 text-center">Start a conversation with our AI assistant!</p>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="ai-input" placeholder="Ask me anything about NEET..." style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; outline: none;" />
+                            <button onclick="sendMessage()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACT SECTION -->
+        <section id="contact-section" class="section contact-section">
+            <div class="container mx-auto">
+                <h1 class="text-4xl font-bold mb-8 text-blue-900">Contact Us</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-4">Get In Touch</h3>
+                        <form id="contact-form">
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-semibold mb-2">Name</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Your Name" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-semibold mb-2">Email</label>
+                                <input type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Your Email" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-semibold mb-2">Message</label>
+                                <textarea class="w-full px-4 py-2 border border-gray-300 rounded-lg" rows="4" placeholder="Your Message" required></textarea>
+                            </div>
+                            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all w-full">Send Message</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold text-blue-900 mb-4">Contact Information</h3>
+                        <div class="mb-6">
+                            <p class="text-gray-600 mb-2"><strong>Email:</strong></p>
+                            <p class="text-blue-600"><a href="mailto:support@soulofmedico.com">support@soulofmedico.com</a></p>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-gray-600 mb-2"><strong>Phone:</strong></p>
+                            <p class="text-blue-600"><a href="tel:+919876543210">+91-9876543210</a></p>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-gray-600 mb-2"><strong>Address:</strong></p>
+                            <p class="text-gray-700">Soul of Medico, New Delhi, India</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="navigation">
+        <ul>
+            <li class="list active">
+                <a onclick="navigateTo('home-section', 0)">
+                    <span class="icon"><ion-icon name="home-outline"></ion-icon></span>
+                    <span class="text">HOME</span>
+                </a>
+            </li>
+            <li class="list">
+                <a onclick="navigateTo('test-section', 1)">
+                    <span class="icon"><ion-icon name="create-outline"></ion-icon></span>
+                    <span class="text">TEST</span>
+                </a>
+            </li>
+            <li class="list">
+                <a onclick="navigateTo('notes-section', 2)">
+                    <span class="icon"><ion-icon name="document-text-outline"></ion-icon></span>
+                    <span class="text">NOTES</span>
+                </a>
+            </li>
+            <li class="list">
+                <a onclick="navigateTo('ai-section', 3)">
+                    <span class="icon"><ion-icon name="chatbubbles-outline"></ion-icon></span>
+                    <span class="text">AI</span>
+                </a>
+            </li>
+            <li class="list">
+                <a onclick="navigateTo('contact-section', 4)">
+                    <span class="icon"><ion-icon name="call-outline"></ion-icon></span>
+                    <span class="text">CONTACT</span>
+                </a>
+            </li>
+            <div class="indicator"></div>
+        </ul>
+    </nav>
+
     <script>
+        // Auth Check
         auth.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = '../signin.html';
+            } else {
+                document.getElementById('displayNameInput').value = user.displayName || '';
+                document.getElementById('emailField').value = user.email || '';
             }
         });
-    </script>
 
-   <!-- Ionicons -->
-<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+        // Navigation Function
+        function navigateTo(sectionId, index) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Show target section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Update active nav item
+            const listItems = document.querySelectorAll('.list');
+            listItems.forEach((item, i) => {
+                item.classList.remove('active');
+                if (i === index) {
+                    item.classList.add('active');
+                    updateIndicator(item);
+                }
+            });
+        }
 
-<style>
-body{
-    padding-bottom:90px;
-}
+        // Alternative function for internal buttons
+        function showSection(sectionId) {
+            const sectionToIndexMap = {
+                'home-section': 0,
+                'test-section': 1,
+                'notes-section': 2,
+                'ai-section': 3,
+                'contact-section': 4
+            };
+            navigateTo(sectionId, sectionToIndexMap[sectionId]);
+        }
 
-.navigation{
-    position:fixed;
-    bottom:0;
-    left:0;
-    width:100%;
-    height:80px;
-    background:#fff;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    box-shadow:0 -5px 20px rgba(0,0,0,0.08);
-    z-index:1000;
-}
+        // Update indicator position
+        function updateIndicator(el) {
+            const indicator = document.querySelector('.indicator');
+            const navUl = document.querySelector('.navigation ul');
+            const liWidth = el.offsetWidth;
+            const liLeft = el.offsetLeft;
+            const liCenterX = liLeft + (liWidth / 2);
+            const indicatorWidth = 70;
+            indicator.style.left = (liCenterX - (indicatorWidth / 2)) + "px";
+        }
 
-.navigation ul{
-    display:flex;
-    width:100%;
-    max-width:500px;
-    position:relative;
-    padding:0;
-    margin:0;
-}
-
-.navigation ul li{
-    list-style:none;
-    position:relative;
-    width:20%;
-    height:70px;
-    z-index:1;
-}
-
-.navigation ul li a{
-    position:relative;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    width:100%;
-    text-decoration:none;
-}
-
-.navigation ul li a .icon{
-    position:relative;
-    display:block;
-    line-height:75px;
-    font-size:24px;
-    text-align:center;
-    transition:0.4s;
-    color:#2563eb;
-}
-
-.navigation ul li a .text{
-    position:absolute;
-    font-size:11px;
-    font-weight:600;
-    color:#2563eb;
-    transform:translateY(20px);
-    opacity:0;
-    transition:0.4s;
-}
-
-.navigation ul li.active a .icon{
-    color:#fff;
-    transform:translateY(-32px);
-}
-
-.navigation ul li.active a .text{
-    opacity:1;
-    transform:translateY(10px);
-}
-
-.indicator{
-    position:absolute;
-    top:-35px;
-    width:70px;
-    height:70px;
-    background:#2563eb;
-    border-radius:50%;
-    transition:0.4s;
-}
-</style>
-
-<div class="navigation">
-    <ul>
-        <li class="list active">
-            <a href="home.html">
-                <span class="icon"><ion-icon name="home-outline"></ion-icon></span>
-                <span class="text">HOME</span>
-            </a>
-        </li>
-
-        <li class="list">
-            <a href="mocktest.html">
-                <span class="icon"><ion-icon name="create-outline"></ion-icon></span>
-                <span class="text">TEST</span>
-            </a>
-        </li>
-
-        <li class="list">
-            <a href="notes.html">
-                <span class="icon"><ion-icon name="document-text-outline"></ion-icon></span>
-                <span class="text">NOTES</span>
-            </a>
-        </li>
-
-        <li class="list">
-            <a href="ai.html">
-                <span class="icon"><ion-icon name="chatbubbles-outline"></ion-icon></span>
-                <span class="text">AI</span>
-            </a>
-        </li>
-
-        <li class="list">
-            <a href="contact.html">
-                <span class="icon"><ion-icon name="call-outline"></ion-icon></span>
-                <span class="text">CONTACT</span>
-            </a>
-        </li>
-
-        <div class="indicator"></div>
-    </ul>
-</div>
-
-<script>
-const list = document.querySelectorAll('.list');
-const indicator = document.querySelector('.indicator');
-
-function updateIndicator(el){
-    indicator.style.left = el.offsetLeft + (el.offsetWidth/2 - 35) + "px";
-}
-
-list.forEach(item=>{
-    item.addEventListener('click',function(){
-        list.forEach(i=>i.classList.remove('active'));
-        this.classList.add('active');
-        updateIndicator(this);
-    });
-});
-
-window.addEventListener('load',()=>{
-    const active = document.querySelector('.list.active');
-    updateIndicator(active);
-});
-</script>
-    <script>
+        // Profile Panel
         const profileBtn = document.getElementById('profileBtn');
         const profilePanel = document.getElementById('profilePanel');
-        const displayNameInput = document.getElementById('displayNameInput');
-        const emailField = document.getElementById('emailField');
         const saveProfileBtn = document.getElementById('saveProfileBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const profileStatus = document.getElementById('profileStatus');
-
-        auth.onAuthStateChanged((user) => {
-            if (!user) {
-                return;
-            }
-            displayNameInput.value = user.displayName || '';
-            emailField.value = user.email || '';
-        });
-
-        function openProfilePanel() {
-            profilePanel.classList.add('open');
-            profilePanel.setAttribute('aria-hidden', 'false');
-        }
-
-        function closeProfilePanel() {
-            profilePanel.classList.remove('open');
-            profilePanel.setAttribute('aria-hidden', 'true');
-        }
+        const displayNameInput = document.getElementById('displayNameInput');
+        const emailField = document.getElementById('emailField');
 
         profileBtn.addEventListener('click', () => {
             if (profilePanel.classList.contains('open')) {
-                closeProfilePanel();
-                return;
+                profilePanel.classList.remove('open');
+                profilePanel.setAttribute('aria-hidden', 'true');
+            } else {
+                profilePanel.classList.add('open');
+                profilePanel.setAttribute('aria-hidden', 'false');
             }
-            openProfilePanel();
         });
 
         window.addEventListener('click', (event) => {
             if (!profilePanel.contains(event.target) && !profileBtn.contains(event.target)) {
-                closeProfilePanel();
+                profilePanel.classList.remove('open');
+                profilePanel.setAttribute('aria-hidden', 'true');
             }
         });
 
@@ -359,14 +696,14 @@ window.addEventListener('load',()=>{
 
             const newName = displayNameInput.value.trim();
             if (!newName) {
-                profileStatus.textContent = 'Please enter a valid nickname or user name.';
+                profileStatus.textContent = 'Please enter a valid name.';
                 profileStatus.style.color = '#b91c1c';
                 return;
             }
 
             try {
                 await user.updateProfile({ displayName: newName });
-                profileStatus.textContent = 'Profile updated successfully.';
+                profileStatus.textContent = 'Profile updated successfully!';
                 profileStatus.style.color = '#16a34a';
             } catch (error) {
                 console.error('Profile update failed:', error);
@@ -380,9 +717,51 @@ window.addEventListener('load',()=>{
                 await auth.signOut();
                 window.location.href = '../signin.html';
             } catch (error) {
-                console.error('Log out failed:', error);
+                console.error('Logout failed:', error);
                 profileStatus.textContent = 'Unable to sign out right now.';
                 profileStatus.style.color = '#b91c1c';
+            }
+        });
+
+        // Initialize indicator position on load
+        window.addEventListener('load', () => {
+            const activeItem = document.querySelector('.list.active');
+            if (activeItem) {
+                updateIndicator(activeItem);
+            }
+        });
+
+        // AI Chat Function
+        function sendMessage() {
+            const input = document.getElementById('ai-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const chatContainer = document.getElementById('chat-container');
+            
+            // Add user message
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.style.cssText = 'margin: 12px 0; text-align: right;';
+            userMsgDiv.innerHTML = `<div style="background: #2563eb; color: white; display: inline-block; padding: 10px 14px; border-radius: 12px; max-width: 70%;">${message}</div>`;
+            chatContainer.appendChild(userMsgDiv);
+
+            // Simulate AI response
+            setTimeout(() => {
+                const aiBotDiv = document.createElement('div');
+                aiBotDiv.style.cssText = 'margin: 12px 0; text-align: left;';
+                aiBotDiv.innerHTML = `<div style="background: #e0e7ff; color: #2563eb; display: inline-block; padding: 10px 14px; border-radius: 12px; max-width: 70%;">Thanks for your question! I'm here to help you prepare for NEET. Please provide more details about what you'd like to know.</div>`;
+                chatContainer.appendChild(aiBotDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 500);
+
+            input.value = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Allow Enter key to send messages
+        document.getElementById('ai-input')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
         });
     </script>
